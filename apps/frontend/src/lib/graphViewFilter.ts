@@ -1,6 +1,7 @@
 import type { AccessGraph, AccessTrace } from "@/types/graph.types";
 
-export type GraphViewMode = "overview" | "focus" | "full";
+/** Summary = permission landscape without pure membership edges. Path = user/repo/trace slice. Advanced = full graph. */
+export type GraphViewMode = "summary" | "path" | "advanced";
 
 function repoNodeId(repoId: string): string {
   return `repo:${repoId}`;
@@ -47,7 +48,7 @@ function expandMemberOfAncestors(
 }
 
 /**
- * Filters the access graph for overview, focus path, or full exploration.
+ * Filters the access graph for summary (overview), path (focus), or advanced (full) exploration.
  */
 export function filterGraphForViewMode(
   graph: AccessGraph,
@@ -58,11 +59,11 @@ export function filterGraphForViewMode(
     readonly trace: AccessTrace | undefined;
   }
 ): AccessGraph {
-  if (mode === "full") {
+  if (mode === "advanced") {
     return graph;
   }
 
-  if (mode === "overview") {
+  if (mode === "summary") {
     const permEdges = graph.edges.filter((e) => e.permission !== "memberOf");
     const nodeIds = new Set<string>();
     for (const e of permEdges) {

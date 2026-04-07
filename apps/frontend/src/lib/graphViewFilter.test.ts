@@ -32,8 +32,8 @@ const baseGraph: AccessGraph = {
 };
 
 describe("filterGraphForViewMode", () => {
-  it("full mode returns the same graph reference shape (all nodes)", () => {
-    const out = filterGraphForViewMode(baseGraph, "full", {
+  it("advanced mode returns all nodes and edges", () => {
+    const out = filterGraphForViewMode(baseGraph, "advanced", {
       selectedUserId: null,
       selectedRepoId: null,
       trace: undefined,
@@ -42,8 +42,8 @@ describe("filterGraphForViewMode", () => {
     expect(out.edges).toHaveLength(2);
   });
 
-  it("overview excludes pure membership-only nodes", () => {
-    const out = filterGraphForViewMode(baseGraph, "overview", {
+  it("summary excludes pure membership-only nodes", () => {
+    const out = filterGraphForViewMode(baseGraph, "summary", {
       selectedUserId: null,
       selectedRepoId: null,
       trace: undefined,
@@ -53,16 +53,25 @@ describe("filterGraphForViewMode", () => {
     expect(out.edges[0]?.permission).toBe("Contribute");
   });
 
-  it("focus mode includes user, repo, and trace subjects", () => {
+  it("path mode includes user, repo, and trace subjects", () => {
     const trace: AccessTrace = {
       userId: "u1",
       repoId: "r1",
-      steps: [{ subjectId: "g1", subjectType: "group", subjectLabel: "G", permission: "x", level: "allow", reason: "r" }],
+      steps: [
+        {
+          subjectId: "g1",
+          subjectType: "group",
+          subjectLabel: "G",
+          permission: "x",
+          level: "allow",
+          reason: "r",
+        },
+      ],
       effectivePermissions: [],
       deniedPermissions: [],
       hasAccess: true,
     };
-    const out = filterGraphForViewMode(baseGraph, "focus", {
+    const out = filterGraphForViewMode(baseGraph, "path", {
       selectedUserId: "u1",
       selectedRepoId: "r1",
       trace,

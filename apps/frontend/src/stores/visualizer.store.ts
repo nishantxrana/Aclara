@@ -7,6 +7,17 @@ export type ExplorerTab = "users" | "repos" | "risks";
 
 export type WorkspaceView = "overview" | "investigate";
 
+/** How text search affects the graph: highlight (default), add 1-hop context, or hide non-matches. */
+export type GraphTextFilterMode = "highlight" | "contextual" | "hide";
+
+export type RecentProject = { readonly id: string; readonly name: string };
+
+export interface GraphViewport {
+  readonly x: number;
+  readonly y: number;
+  readonly zoom: number;
+}
+
 export interface VisualizerState {
   selectedProject: string | null;
   selectedProjectName: string | null;
@@ -15,6 +26,7 @@ export interface VisualizerState {
   hoveredNodeId: string | null;
   hoveredEdgeId: string | null;
   filterText: string;
+  graphTextFilterMode: GraphTextFilterMode;
   showOnlyOverPrivileged: boolean;
   graphViewMode: GraphViewMode;
   explorerTab: ExplorerTab;
@@ -23,6 +35,18 @@ export interface VisualizerState {
   inspectorNodeType: "user" | "group" | "repo" | null;
   tracePanelWidthPx: number;
   workspaceView: WorkspaceView;
+  /** Last N projects selected this session (in-memory only). */
+  recentProjects: RecentProject[];
+  /** When URL had ?project= that did not match the org list after load. */
+  urlProjectResolveError: string | null;
+  /** Pinned trace timeline step for graph path highlight (click). */
+  highlightedTraceStepIndex: number | null;
+  /** Temporary trace step while hovering the timeline (overrides pin for preview). */
+  traceStepHoverIndex: number | null;
+  /** Saved React Flow viewport per project name (optional). */
+  graphViewportByProject: Record<string, GraphViewport>;
+  /** Project for which viewport was last applied (avoid refit on every tweak). */
+  graphViewportAppliedKey: string | null;
 }
 
 export interface VisualizerActions {
@@ -32,16 +56,30 @@ export interface VisualizerActions {
   setHoveredNode: (id: string | null) => void;
   setHoveredEdge: (id: string | null) => void;
   setFilterText: (text: string) => void;
+  setGraphTextFilterMode: (mode: GraphTextFilterMode) => void;
   toggleOverPrivileged: () => void;
   setGraphViewMode: (mode: GraphViewMode) => void;
   setExplorerTab: (tab: ExplorerTab) => void;
   setInspector: (nodeId: string | null, nodeType: "user" | "group" | "repo" | null) => void;
   setTracePanelWidthPx: (w: number) => void;
   setWorkspaceView: (view: WorkspaceView) => void;
+  setUrlProjectResolveError: (message: string | null) => void;
+  setHighlightedTraceStepIndex: (index: number | null) => void;
+  setTraceStepHoverIndex: (index: number | null) => void;
+  setGraphViewportForProject: (projectName: string, v: GraphViewport) => void;
+  clearGraphViewportForProject: (projectName: string) => void;
+  markGraphViewportApplied: (key: string | null) => void;
   clearSelection: () => void;
 }
 
 type VisualizerStore = VisualizerState & VisualizerActions;
+
+const MAX_RECENT = 5;
+
+function pushRecent(list: RecentProject[], entry: RecentProject): RecentProject[] {
+  const without = list.filter((p) => p.name !== entry.name);
+  return [entry, ...without].slice(0, MAX_RECENT);
+}
 
 const storeCreator: StateCreator<VisualizerStore> = (set) => ({
   selectedProject: null,
@@ -51,16 +89,36 @@ const storeCreator: StateCreator<VisualizerStore> = (set) => ({
   hoveredNodeId: null,
   hoveredEdgeId: null,
   filterText: "",
+  graphTextFilterMode: "highlight",
   showOnlyOverPrivileged: false,
-  graphViewMode: "overview",
+  graphViewMode: "summary",
   explorerTab: "users",
   inspectorNodeId: null,
   inspectorNodeType: null,
   tracePanelWidthPx: 320,
-  workspaceView: "investigate",
+  workspaceView: "overview",
+  recentProjects: [],
+  urlProjectResolveError: null,
+  highlightedTraceStepIndex: null,
+  traceStepHoverIndex: null,
+  graphViewportByProject: {},
+  graphViewportAppliedKey: null,
 
   setSelectedProject: (id, name) =>
-    set({ selectedProject: id, selectedProjectName: name }),
+    set((state) => {
+      if (id !== null && name !== null) {
+        return {
+          selectedProject: id,
+          selectedProjectName: name,
+          recentProjects: pushRecent(state.recentProjects, { id, name }),
+          urlProjectResolveError: null,
+        };
+      }
+      return {
+        selectedProject: id,
+        selectedProjectName: name,
+      };
+    }),
 
   setSelectedUser: (id) => set({ selectedUserId: id }),
 
@@ -71,6 +129,8 @@ const storeCreator: StateCreator<VisualizerStore> = (set) => ({
   setHoveredEdge: (id) => set({ hoveredEdgeId: id }),
 
   setFilterText: (text) => set({ filterText: text }),
+
+  setGraphTextFilterMode: (mode) => set({ graphTextFilterMode: mode }),
 
   toggleOverPrivileged: () =>
     set((state) => ({ showOnlyOverPrivileged: !state.showOnlyOverPrivileged })),
@@ -86,7 +146,28 @@ const storeCreator: StateCreator<VisualizerStore> = (set) => ({
 
   setWorkspaceView: (view) => set({ workspaceView: view }),
 
-  /** Clears trace targets, inspector, and hover; keeps project and filters. */
+  setUrlProjectResolveError: (message) => set({ urlProjectResolveError: message }),
+
+  setHighlightedTraceStepIndex: (index) =>
+    set({ highlightedTraceStepIndex: index, traceStepHoverIndex: null }),
+
+  setTraceStepHoverIndex: (index) => set({ traceStepHoverIndex: index }),
+
+  setGraphViewportForProject: (projectName, v) =>
+    set((state) => ({
+      graphViewportByProject: { ...state.graphViewportByProject, [projectName]: v },
+    })),
+
+  clearGraphViewportForProject: (projectName) =>
+    set((state) => {
+      const next = { ...state.graphViewportByProject };
+      delete next[projectName];
+      return { graphViewportByProject: next };
+    }),
+
+  markGraphViewportApplied: (key) => set({ graphViewportAppliedKey: key }),
+
+  /** Clears trace targets, inspector, hover, and trace highlight; keeps project and filters. */
   clearSelection: () =>
     set({
       selectedUserId: null,
@@ -95,6 +176,8 @@ const storeCreator: StateCreator<VisualizerStore> = (set) => ({
       hoveredEdgeId: null,
       inspectorNodeId: null,
       inspectorNodeType: null,
+      highlightedTraceStepIndex: null,
+      traceStepHoverIndex: null,
     }),
 });
 

@@ -12,6 +12,8 @@ import {
 } from "@/api/insightops.api";
 import { useVisualizerStore } from "@/stores/visualizer.store";
 
+import { uxEvent } from "@/lib/uxTelemetry";
+
 import { PermissionChip } from "./PermissionChip";
 import { TraceStep } from "./TraceStep";
 
@@ -98,21 +100,42 @@ function GuidedChecklist(props: {
 }
 
 export function AccessTracePanel(): JSX.Element {
-  const { selectedProjectName, selectedUserId, selectedRepoId, clearSelection, tracePanelWidthPx, setTracePanelWidthPx } =
-    useVisualizerStore(
-      useShallow((s) => ({
-        selectedProjectName: s.selectedProjectName,
-        selectedUserId: s.selectedUserId,
-        selectedRepoId: s.selectedRepoId,
-        clearSelection: s.clearSelection,
-        tracePanelWidthPx: s.tracePanelWidthPx,
-        setTracePanelWidthPx: s.setTracePanelWidthPx,
-      }))
-    );
+  const {
+    selectedProjectName,
+    selectedUserId,
+    selectedRepoId,
+    clearSelection,
+    tracePanelWidthPx,
+    setTracePanelWidthPx,
+    highlightedTraceStepIndex,
+    traceStepHoverIndex,
+    setHighlightedTraceStepIndex,
+    setTraceStepHoverIndex,
+  } = useVisualizerStore(
+    useShallow((s) => ({
+      selectedProjectName: s.selectedProjectName,
+      selectedUserId: s.selectedUserId,
+      selectedRepoId: s.selectedRepoId,
+      clearSelection: s.clearSelection,
+      tracePanelWidthPx: s.tracePanelWidthPx,
+      setTracePanelWidthPx: s.setTracePanelWidthPx,
+      highlightedTraceStepIndex: s.highlightedTraceStepIndex,
+      traceStepHoverIndex: s.traceStepHoverIndex,
+      setHighlightedTraceStepIndex: s.setHighlightedTraceStepIndex,
+      setTraceStepHoverIndex: s.setTraceStepHoverIndex,
+    }))
+  );
+
+  const effectiveTraceStepIndex = traceStepHoverIndex ?? highlightedTraceStepIndex;
 
   const usersQuery = useUsers(selectedProjectName);
   const reposQuery = useRepos(selectedProjectName);
   const traceQuery = useTrace(selectedProjectName, selectedUserId, selectedRepoId);
+
+  useEffect(() => {
+    setHighlightedTraceStepIndex(null);
+    setTraceStepHoverIndex(null);
+  }, [selectedRepoId, selectedUserId, setHighlightedTraceStepIndex, setTraceStepHoverIndex]);
 
   const userSummary = useMemo(
     () => summarizeUser(selectedUserId, usersQuery.data),
@@ -276,9 +299,21 @@ export function AccessTracePanel(): JSX.Element {
                 ) : (
                   traceQuery.data.steps.map((step, i) => (
                     <TraceStep
+                      isHighlighted={effectiveTraceStepIndex === i}
                       isLast={i === traceQuery.data.steps.length - 1}
                       key={`${step.subjectId}-${String(i)}-${step.permission}`}
+                      onActivate={(idx) => {
+                        setHighlightedTraceStepIndex(idx);
+                        uxEvent("trace.step_pin", { step: idx });
+                      }}
+                      onPointerEnter={(idx) => {
+                        setTraceStepHoverIndex(idx);
+                      }}
+                      onPointerLeave={() => {
+                        setTraceStepHoverIndex(null);
+                      }}
                       step={step}
+                      stepIndex={i}
                     />
                   ))
                 )}

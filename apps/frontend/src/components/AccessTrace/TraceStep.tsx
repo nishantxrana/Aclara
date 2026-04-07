@@ -10,11 +10,21 @@ import {
 export interface ITraceStepProps {
   step: ApiTraceStep;
   isLast: boolean;
+  stepIndex: number;
+  isHighlighted: boolean;
+  onActivate: (index: number) => void;
+  onPointerEnter: (index: number) => void;
+  onPointerLeave: () => void;
 }
 
 export const TraceStep = memo(function TraceStep({
   step,
   isLast,
+  stepIndex,
+  isHighlighted,
+  onActivate,
+  onPointerEnter,
+  onPointerLeave,
 }: ITraceStepProps): JSX.Element {
   const dotTitle = permissionLevelDescription(step.level);
   const viaLine =
@@ -22,8 +32,26 @@ export const TraceStep = memo(function TraceStep({
       ? `Via group: ${step.viaGroup}`
       : null;
 
+  let rowClass =
+    "relative flex w-full gap-3 rounded-md pb-6 pl-0 pr-1 text-left transition-colors last:pb-0 ";
+  rowClass += isHighlighted
+    ? "bg-sky-500/10 ring-1 ring-sky-500/40"
+    : "hover:bg-surface-light/30";
+
   return (
-    <div className="relative flex gap-3 pb-6 last:pb-0">
+    <button
+      className={rowClass}
+      onClick={() => {
+        onActivate(stepIndex);
+      }}
+      onPointerEnter={() => {
+        onPointerEnter(stepIndex);
+      }}
+      onPointerLeave={() => {
+        onPointerLeave();
+      }}
+      type="button"
+    >
       <div className="flex w-4 shrink-0 flex-col items-center">
         <span
           aria-hidden
@@ -37,7 +65,7 @@ export const TraceStep = memo(function TraceStep({
           />
         ) : null}
       </div>
-      <div className="min-w-0 flex-1 space-y-1">
+      <div className="min-w-0 flex-1 space-y-1 py-0.5">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
           <span className="text-sm font-medium text-slate-100">
             {step.subjectLabel}
@@ -55,6 +83,6 @@ export const TraceStep = memo(function TraceStep({
           <span className="text-slate-400">{step.reason}</span>
         </p>
       </div>
-    </div>
+    </button>
   );
 });

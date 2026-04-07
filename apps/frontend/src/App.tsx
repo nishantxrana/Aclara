@@ -2,16 +2,13 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import { useSessionStatus } from "@/api/insightops.api";
 import { ConnectScreen } from "@/components/Connect/ConnectScreen";
+import { AppLoadingShell } from "@/components/Layout/AppLoadingShell";
 import { WorkspacePage } from "@/pages/WorkspacePage";
 
 function SessionGate(props: { children: JSX.Element }): JSX.Element {
   const session = useSessionStatus();
   if (session.isPending) {
-    return (
-      <div className="flex h-screen min-h-0 flex-col items-center justify-center bg-surface px-4 text-sm text-slate-400">
-        Checking Azure DevOps connection…
-      </div>
-    );
+    return <AppLoadingShell message="Checking Azure DevOps connection…" />;
   }
   if (session.data?.connected !== true) {
     return <Navigate replace to="/connect" />;

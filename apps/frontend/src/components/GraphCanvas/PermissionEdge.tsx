@@ -13,6 +13,8 @@ import { useVisualizerStore } from "@/stores/visualizer.store";
 export interface IPermissionEdgeData extends Record<string, unknown> {
   level: PermissionLevel;
   permission: string;
+  pathHighlighted?: boolean;
+  traceFocusActive?: boolean;
 }
 
 function strokeForLevel(level: PermissionLevel): string {
@@ -31,11 +33,17 @@ function dashForLevel(level: PermissionLevel): string | undefined {
 
 function PermissionEdgeComponent(props: EdgeProps): JSX.Element {
   const hoveredEdgeId = useVisualizerStore((s) => s.hoveredEdgeId);
-  const showLabel = hoveredEdgeId === props.id;
-
   const raw = props.data as IPermissionEdgeData | undefined;
   const level: PermissionLevel = raw?.level ?? "not-set";
   const permission = raw?.permission ?? "";
+  const pathHighlighted = raw?.pathHighlighted === true;
+  const traceFocusActive = raw?.traceFocusActive === true;
+
+  const showLabel =
+    hoveredEdgeId === props.id || (traceFocusActive && pathHighlighted);
+
+  const dimForTrace = traceFocusActive && !pathHighlighted;
+  const edgeOpacity = dimForTrace ? 0.22 : 1;
 
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX: props.sourceX,
@@ -48,6 +56,8 @@ function PermissionEdgeComponent(props: EdgeProps): JSX.Element {
 
   const stroke = strokeForLevel(level);
   const strokeDasharray = dashForLevel(level);
+  const strokeWidth =
+    pathHighlighted && traceFocusActive ? 2.5 : level === "not-set" ? 1.25 : 1.75;
 
   return (
     <>
@@ -56,8 +66,9 @@ function PermissionEdgeComponent(props: EdgeProps): JSX.Element {
         path={edgePath}
         style={{
           stroke,
-          strokeWidth: level === "not-set" ? 1.25 : 1.75,
+          strokeWidth,
           strokeDasharray,
+          opacity: edgeOpacity,
         }}
       />
       {permission.length > 0 && showLabel ? (

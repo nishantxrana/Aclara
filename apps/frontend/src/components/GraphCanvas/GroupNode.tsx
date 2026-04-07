@@ -6,13 +6,26 @@ export interface IGroupNodeData {
   isOverPrivileged: boolean;
   selected: boolean;
   dimmed: boolean;
+  inspectorActive?: boolean;
+  pathHighlight?: boolean;
+}
+
+function borderClassForNode(data: IGroupNodeData): string {
+  if (data.selected) {
+    return "ring-2 ring-primary ring-offset-2 ring-offset-surface";
+  }
+  if (data.inspectorActive === true) {
+    return "ring-2 ring-sky-500/80 ring-offset-2 ring-offset-surface";
+  }
+  if (data.pathHighlight === true) {
+    return "ring-2 ring-sky-400/70 ring-offset-1 ring-offset-surface";
+  }
+  return "border border-surface-light";
 }
 
 function GroupNodeComponent(props: NodeProps): JSX.Element {
   const data = props.data as unknown as IGroupNodeData;
-  const borderClass = data.selected
-    ? "ring-2 ring-primary ring-offset-2 ring-offset-surface"
-    : "border border-surface-light";
+  const borderClass = borderClassForNode(data);
   const privilegeClass = data.isOverPrivileged
     ? "shadow-[0_0_0_1px_theme(colors.amber.500)]"
     : "";

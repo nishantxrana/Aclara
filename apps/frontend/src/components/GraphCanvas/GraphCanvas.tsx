@@ -6,20 +6,22 @@ import {
   ReactFlowProvider,
   useEdgesState,
   useNodesState,
+  useReactFlow,
   type Edge,
   type EdgeTypes,
   type Node,
   type NodeTypes,
 } from "@xyflow/react";
-import { useCallback, useEffect, useMemo, type MouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, type MouseEvent } from "react";
 import { useShallow } from "zustand/react/shallow";
 
 import { useGraph, useTrace } from "@/api/insightops.api";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { filterGraphForViewMode } from "@/lib/graphViewFilter";
 import { createLogger } from "@/utils/logger";
-import type { AccessGraph, NodeType } from "@/types/graph.types";
-import { useVisualizerStore } from "@/stores/visualizer.store";
+import type { AccessGraph, AccessTrace, NodeType } from "@/types/graph.types";
+import { useVisualizerStore, type GraphTextFilterMode } from "@/stores/visualizer.store";
+import { applyGraphTextAndRiskFilter } from "@/lib/graphTextFilter";
 import { layoutWithDagreLR } from "@/utils/dagreLayout";
 import { GRAPH_NODE_COLORS } from "@/theme/graphColors";
 import { isGraphNodeSelected, repoIdFromNodeId } from "@/utils/graphIds";
@@ -43,41 +45,49 @@ const defaultEdgeOptions = { type: "permission" as const };
 
 const canvasLog = createLogger("GraphCanvas");
 
-function graphMatchesFilter(
-  graph: AccessGraph,
-  filterLower: string,
-  onlyOverPrivileged: boolean
-): { nodes: AccessGraph["nodes"]; edges: AccessGraph["edges"] } {
-  let nodes = graph.nodes;
-
-  if (filterLower.length > 0) {
-    nodes = nodes.filter(
-      (n) =>
-        n.label.toLowerCase().includes(filterLower) ||
-        n.id.toLowerCase().includes(filterLower)
-    );
+function pathHighlightNodeIds(
+  trace: AccessTrace | undefined,
+  stepIndex: number | null,
+  selectedUserId: string | null,
+  selectedRepoId: string | null
+): Set<string> {
+  const s = new Set<string>();
+  if (selectedUserId !== null) {
+    s.add(selectedUserId);
   }
-
-  if (onlyOverPrivileged) {
-    nodes = nodes.filter((n) => n.isOverPrivileged === true);
+  if (selectedRepoId !== null) {
+    s.add(`repo:${selectedRepoId}`);
   }
-
-  const idSet = new Set(nodes.map((n) => n.id));
-  const edges = graph.edges.filter(
-    (e) => idSet.has(e.source) && idSet.has(e.target)
-  );
-
-  return { nodes, edges };
+  if (trace !== undefined && stepIndex !== null && stepIndex >= 0) {
+    for (let i = 0; i <= stepIndex; i += 1) {
+      const st = trace.steps[i];
+      if (st !== undefined) {
+        s.add(st.subjectId);
+      }
+    }
+  }
+  return s;
 }
 
 function toBaseFlowElements(
   graph: AccessGraph,
   filterLower: string,
-  onlyOverPrivileged: boolean
-): { nodes: Node[]; edges: Edge[] } {
-  const { nodes: gn, edges: ge } = graphMatchesFilter(
+  textMode: GraphTextFilterMode,
+  onlyOverPrivileged: boolean,
+  pathHighlightIds: Set<string>,
+  traceStepHighlightActive: boolean,
+  inspectorNodeId: string | null,
+  inspectorNodeType: "user" | "group" | "repo" | null
+): {
+  nodes: Node[];
+  edges: Edge[];
+  dimIds: Set<string>;
+  layoutNodeCount: number;
+} {
+  const { nodes: gn, edges: ge, dimIds } = applyGraphTextAndRiskFilter(
     graph,
     filterLower,
+    textMode,
     onlyOverPrivileged
   );
 
@@ -90,28 +100,46 @@ function toBaseFlowElements(
       isOverPrivileged: n.isOverPrivileged === true,
       selected: false,
       dimmed: false,
+      inspectorActive:
+        inspectorNodeId !== null &&
+        inspectorNodeId === n.id &&
+        inspectorNodeType === n.type,
+      pathHighlight:
+        traceStepHighlightActive &&
+        pathHighlightIds.size > 0 &&
+        pathHighlightIds.has(n.id),
     },
   }));
 
-  const edges: Edge[] = ge.map((e) => ({
-    id: e.id,
-    source: e.source,
-    target: e.target,
-    type: "permission",
-    data: {
-      level: e.level,
-      permission: e.permission,
-    },
-  }));
+  const edges: Edge[] = ge.map((e) => {
+    const pathHighlighted =
+      traceStepHighlightActive &&
+      pathHighlightIds.size > 0 &&
+      pathHighlightIds.has(e.source) &&
+      pathHighlightIds.has(e.target);
+    return {
+      id: e.id,
+      source: e.source,
+      target: e.target,
+      type: "permission",
+      data: {
+        level: e.level,
+        permission: e.permission,
+        pathHighlighted,
+        traceFocusActive: traceStepHighlightActive,
+      },
+    };
+  });
 
-  return { nodes, edges };
+  return { nodes, edges, dimIds, layoutNodeCount: gn.length };
 }
 
 function patchNodeVisualState(
   node: Node,
   selectedUserId: string | null,
   selectedRepoId: string | null,
-  hoveredNodeId: string | null
+  hoveredNodeId: string | null,
+  dimIds: Set<string>
 ): Node {
   const nt = node.type;
   if (nt !== "user" && nt !== "group" && nt !== "repo") {
@@ -124,13 +152,15 @@ function patchNodeVisualState(
     selectedUserId,
     selectedRepoId
   );
-  const dimmed =
-    hoveredNodeId !== null && hoveredNodeId !== node.id && !selected;
+  const data = node.data as Record<string, unknown>;
+  const filterDim = dimIds.has(node.id);
+  const hoverDim = hoveredNodeId !== null && hoveredNodeId !== node.id && !selected;
+  const dimmed = filterDim || hoverDim;
 
   return {
     ...node,
     data: {
-      ...node.data,
+      ...data,
       selected,
       dimmed,
     },
@@ -138,10 +168,13 @@ function patchNodeVisualState(
 }
 
 function GraphCanvasInner(): JSX.Element {
+  const { fitView, setViewport, getViewport } = useReactFlow();
   const selectedProjectName = useVisualizerStore((s) => s.selectedProjectName);
   const filterText = useVisualizerStore((s) => s.filterText);
+  const graphTextFilterMode = useVisualizerStore((s) => s.graphTextFilterMode);
   const showOnlyOverPrivileged = useVisualizerStore((s) => s.showOnlyOverPrivileged);
   const graphViewMode = useVisualizerStore((s) => s.graphViewMode);
+  const setGraphViewportForProject = useVisualizerStore((s) => s.setGraphViewportForProject);
   const setSelectedUser = useVisualizerStore((s) => s.setSelectedUser);
   const setSelectedRepo = useVisualizerStore((s) => s.setSelectedRepo);
   const setHoveredNode = useVisualizerStore((s) => s.setHoveredNode);
@@ -149,6 +182,9 @@ function GraphCanvasInner(): JSX.Element {
   const setInspector = useVisualizerStore((s) => s.setInspector);
   const setFilterText = useVisualizerStore((s) => s.setFilterText);
   const toggleOverPrivileged = useVisualizerStore((s) => s.toggleOverPrivileged);
+  const highlightedTraceStepIndex = useVisualizerStore((s) => s.highlightedTraceStepIndex);
+  const traceStepHoverIndex = useVisualizerStore((s) => s.traceStepHoverIndex);
+  const effectiveTraceStepIndex = traceStepHoverIndex ?? highlightedTraceStepIndex;
 
   const debouncedFilter = useDebouncedValue(filterText, 300);
   const filterLower = useMemo(
@@ -157,13 +193,16 @@ function GraphCanvasInner(): JSX.Element {
   );
 
   const graphQuery = useGraph(selectedProjectName);
-  const { selectedUserId, selectedRepoId, hoveredNodeId } = useVisualizerStore(
-    useShallow((s) => ({
-      selectedUserId: s.selectedUserId,
-      selectedRepoId: s.selectedRepoId,
-      hoveredNodeId: s.hoveredNodeId,
-    }))
-  );
+  const { selectedUserId, selectedRepoId, hoveredNodeId, inspectorNodeId, inspectorNodeType } =
+    useVisualizerStore(
+      useShallow((s) => ({
+        selectedUserId: s.selectedUserId,
+        selectedRepoId: s.selectedRepoId,
+        hoveredNodeId: s.hoveredNodeId,
+        inspectorNodeId: s.inspectorNodeId,
+        inspectorNodeType: s.inspectorNodeType,
+      }))
+    );
 
   const traceQuery = useTrace(selectedProjectName, selectedUserId, selectedRepoId);
 
@@ -184,19 +223,46 @@ function GraphCanvasInner(): JSX.Element {
     traceQuery.data,
   ]);
 
+  const pathIds = useMemo(
+    () =>
+      pathHighlightNodeIds(
+        traceQuery.data,
+        effectiveTraceStepIndex,
+        selectedUserId,
+        selectedRepoId
+      ),
+    [
+      effectiveTraceStepIndex,
+      selectedRepoId,
+      selectedUserId,
+      traceQuery.data,
+    ]
+  );
+
+  const traceStepHighlightActive = effectiveTraceStepIndex !== null;
+
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const dimIdsRef = useRef<Set<string>>(new Set());
+  const lastViewportKeyRef = useRef<string>("");
 
   useEffect(() => {
     if (viewGraph === undefined) {
       return;
     }
 
-    const { nodes: baseNodes, edges: baseEdges } = toBaseFlowElements(
-      viewGraph,
-      filterLower,
-      showOnlyOverPrivileged
-    );
+    const { nodes: baseNodes, edges: baseEdges, dimIds, layoutNodeCount } =
+      toBaseFlowElements(
+        viewGraph,
+        filterLower,
+        graphTextFilterMode,
+        showOnlyOverPrivileged,
+        pathIds,
+        traceStepHighlightActive,
+        inspectorNodeId,
+        inspectorNodeType
+      );
+    dimIdsRef.current = dimIds;
 
     canvasLog.debug("graph.canvas.filtered", {
       projectName: viewGraph.projectName,
@@ -206,6 +272,7 @@ function GraphCanvasInner(): JSX.Element {
       filteredEdgeCount: baseEdges.length,
       graphViewMode,
       filterActive: filterLower.length > 0,
+      textFilterMode: graphTextFilterMode,
       overPrivilegedOnly: showOnlyOverPrivileged,
     });
 
@@ -218,22 +285,49 @@ function GraphCanvasInner(): JSX.Element {
           n,
           ui.selectedUserId,
           ui.selectedRepoId,
-          ui.hoveredNodeId
+          ui.hoveredNodeId,
+          dimIds
         )
       )
     );
     setEdges(baseEdges);
+
+    const vpKey = `${selectedProjectName ?? ""}|${graphViewMode}|${String(layoutNodeCount)}`;
+    const raf = requestAnimationFrame(() => {
+      if (lastViewportKeyRef.current !== vpKey) {
+        lastViewportKeyRef.current = vpKey;
+        void fitView({ padding: 0.2 });
+        return;
+      }
+      if (selectedProjectName !== null) {
+        const saved = useVisualizerStore.getState().graphViewportByProject[selectedProjectName];
+        if (saved !== undefined) {
+          void setViewport(saved);
+        }
+      }
+    });
     canvasLog.debug("graph.canvas.layout_applied", {
       positionedNodeCount: positioned.length,
       edgeCount: baseEdges.length,
     });
+    return () => {
+      cancelAnimationFrame(raf);
+    };
   }, [
     viewGraph,
     filterLower,
+    graphTextFilterMode,
     showOnlyOverPrivileged,
     graphViewMode,
+    pathIds,
+    traceStepHighlightActive,
+    inspectorNodeId,
+    inspectorNodeType,
+    selectedProjectName,
     setNodes,
     setEdges,
+    fitView,
+    setViewport,
   ]);
 
   useEffect(() => {
@@ -241,11 +335,19 @@ function GraphCanvasInner(): JSX.Element {
       if (prev.length === 0) {
         return prev;
       }
+      const dimIds = dimIdsRef.current;
       return prev.map((n) =>
-        patchNodeVisualState(n, selectedUserId, selectedRepoId, hoveredNodeId)
+        patchNodeVisualState(n, selectedUserId, selectedRepoId, hoveredNodeId, dimIds)
       );
     });
   }, [selectedUserId, selectedRepoId, hoveredNodeId, setNodes]);
+
+  const onMoveEnd = useCallback(() => {
+    if (selectedProjectName === null) {
+      return;
+    }
+    setGraphViewportForProject(selectedProjectName, getViewport());
+  }, [getViewport, selectedProjectName, setGraphViewportForProject]);
 
   const onNodeClick = useCallback(
     (_: MouseEvent, node: Node) => {
@@ -295,8 +397,8 @@ function GraphCanvasInner(): JSX.Element {
 
   if (selectedProjectName === null) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-surface text-slate-400">
-        <p className="text-sm">Select a project to load the access graph.</p>
+      <div className="flex flex-1 items-center justify-center bg-surface px-6 text-center text-slate-400">
+        <p className="max-w-sm text-sm">Select a project in the header to load the access graph.</p>
       </div>
     );
   }
@@ -349,13 +451,13 @@ function GraphCanvasInner(): JSX.Element {
         defaultEdgeOptions={defaultEdgeOptions}
         edges={edges}
         edgeTypes={edgeTypes}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
+        fitView={false}
         nodes={nodes}
         nodeTypes={nodeTypes}
         onEdgeMouseEnter={onEdgeMouseEnter}
         onEdgeMouseLeave={onEdgeMouseLeave}
         onEdgesChange={onEdgesChange}
+        onMoveEnd={onMoveEnd}
         onNodeClick={onNodeClick}
         onNodeMouseEnter={onNodeMouseEnter}
         onNodeMouseLeave={onNodeMouseLeave}

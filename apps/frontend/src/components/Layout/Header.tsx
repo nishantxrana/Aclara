@@ -9,7 +9,10 @@ import {
   useProjects,
   useSessionStatus,
 } from "@/api/insightops.api";
+import { uxEvent } from "@/lib/uxTelemetry";
 import { useVisualizerStore } from "@/stores/visualizer.store";
+
+import { ProjectPicker } from "./ProjectPicker";
 
 function formatSyncedAt(iso: string | undefined): string {
   if (iso === undefined || iso.length === 0) {
@@ -25,15 +28,23 @@ function formatSyncedAt(iso: string | undefined): string {
   });
 }
 
-export function Header(): JSX.Element {
+export type HeaderLayout = "workspace" | "pickProject";
+
+export function Header(props: { readonly layout?: HeaderLayout }): JSX.Element {
+  const layout = props.layout ?? "workspace";
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const sessionQuery = useSessionStatus();
   const projectsQuery = useProjects();
   const selectedProjectName = useVisualizerStore((s) => s.selectedProjectName);
+  const selectedProject = useVisualizerStore((s) => s.selectedProject);
+  const recentProjects = useVisualizerStore((s) => s.recentProjects);
   const setSelectedProject = useVisualizerStore((s) => s.setSelectedProject);
   const setSelectedUser = useVisualizerStore((s) => s.setSelectedUser);
   const setSelectedRepo = useVisualizerStore((s) => s.setSelectedRepo);
+  const setWorkspaceView = useVisualizerStore((s) => s.setWorkspaceView);
+  const clearGraphViewportForProject = useVisualizerStore((s) => s.clearGraphViewportForProject);
+  const markGraphViewportApplied = useVisualizerStore((s) => s.markGraphViewportApplied);
 
   const graphData =
     selectedProjectName !== null
@@ -42,21 +53,31 @@ export function Header(): JSX.Element {
         )
       : undefined;
 
-  const onProjectChange = (name: string) => {
-    if (name.length === 0) {
+  const onProjectChange = (id: string | null, name: string | null) => {
+    if (name === null || name.length === 0) {
       setSelectedProject(null, null);
       setSelectedUser(null);
       setSelectedRepo(null);
       return;
     }
-    const match = projectsQuery.data?.find((p) => p.name === name);
-    if (match !== undefined) {
-      setSelectedProject(match.id, match.name);
+    const prevName = useVisualizerStore.getState().selectedProjectName;
+    if (prevName !== null && prevName !== name) {
+      markGraphViewportApplied(null);
+    }
+    if (id !== null) {
+      setSelectedProject(id, name);
     } else {
-      setSelectedProject(null, name);
+      const match = projectsQuery.data?.find((p) => p.name === name);
+      if (match !== undefined) {
+        setSelectedProject(match.id, match.name);
+      } else {
+        setSelectedProject(null, name);
+      }
     }
     setSelectedUser(null);
     setSelectedRepo(null);
+    uxEvent("project_selected", { phase: layout, hasId: id !== null });
+    setWorkspaceView("overview");
   };
 
   const refreshMutation = useMutation({
@@ -96,6 +117,9 @@ export function Header(): JSX.Element {
     }
   }
 
+  const orgLabel =
+    sessionQuery.data?.connected === true ? sessionQuery.data.org : undefined;
+
   return (
     <header className="flex shrink-0 flex-wrap items-center gap-4 border-b border-surface-light bg-surface-light/40 px-4 py-3">
       <div className="flex min-w-0 flex-col gap-0.5">
@@ -105,66 +129,71 @@ export function Header(): JSX.Element {
             {connectionLabel}
           </span>
         ) : null}
-      </div>
-
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
-        {projectsQuery.isPending ? (
-          <div className="h-9 w-56 max-w-full animate-pulse rounded-md bg-surface-light" />
-        ) : projectsQuery.isError ? (
-          <p className="text-sm text-red-400">{projectsQuery.error.message}</p>
-        ) : (
-          <div className="flex min-w-0 items-center gap-2">
-            <label className="sr-only" htmlFor="project-select">
-              Project
-            </label>
-            <select
-              className="max-w-xs min-w-[12rem] cursor-pointer rounded-md border border-surface-light bg-surface px-3 py-2 text-sm text-slate-100 focus:border-primary focus:outline-none"
-              id="project-select"
-              onChange={(e) => {
-                onProjectChange(e.target.value);
-              }}
-              value={selectedProjectName ?? ""}
-            >
-              <option value="">Select project…</option>
-              {(projectsQuery.data ?? []).map((p) => (
-                <option key={p.id} value={p.name}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {selectedProjectName !== null ? (
-          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-            <span>
-              Nodes:{" "}
-              <span className="font-medium text-slate-300">
-                {nodeCount === null ? "…" : String(nodeCount)}
-              </span>
-            </span>
-            <span className="hidden sm:inline">
-              Last sync:{" "}
-              <span className="font-medium text-slate-300">
-                {formatSyncedAt(graphData?.generatedAt)}
-              </span>
-            </span>
-          </div>
+        {orgLabel !== undefined ? (
+          <span className="truncate text-[10px] text-slate-500" title={orgLabel}>
+            {orgLabel}
+          </span>
         ) : null}
       </div>
 
+      {layout === "workspace" ? (
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+          <ProjectPicker
+            error={projectsQuery.error ?? null}
+            isLoading={projectsQuery.isPending}
+            onRetry={() => {
+              void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.projects });
+            }}
+            onSelect={onProjectChange}
+            {...(orgLabel !== undefined ? { orgLabel } : {})}
+            projects={projectsQuery.data ?? []}
+            recentProjects={recentProjects}
+            selectedProjectId={selectedProject}
+            selectedProjectName={selectedProjectName}
+            variant="header"
+          />
+
+          {selectedProjectName !== null ? (
+            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+              <span>
+                Nodes:{" "}
+                <span className="font-medium text-slate-300">
+                  {nodeCount === null ? "…" : String(nodeCount)}
+                </span>
+              </span>
+              <span className="hidden sm:inline">
+                Last sync:{" "}
+                <span className="font-medium text-slate-300">
+                  {formatSyncedAt(graphData?.generatedAt)}
+                </span>
+              </span>
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <div className="min-w-0 flex-1 text-sm text-slate-500">
+          Select a project below to open your workspace.
+        </div>
+      )}
+
       <div className="flex shrink-0 flex-wrap items-center gap-2">
-        <button
-          className="flex shrink-0 items-center gap-2 rounded-md border border-surface-light px-3 py-2 text-xs font-medium text-slate-300 hover:border-primary/50 hover:text-slate-100 disabled:opacity-40"
-          disabled={selectedProjectName === null || refreshMutation.isPending}
-          onClick={() => {
-            refreshMutation.mutate();
-          }}
-          type="button"
-        >
-          <RefreshCw className="h-3.5 w-3.5" aria-hidden />
-          Refresh
-        </button>
+        {layout === "workspace" ? (
+          <button
+            className="flex shrink-0 items-center gap-2 rounded-md border border-surface-light px-3 py-2 text-xs font-medium text-slate-300 hover:border-primary/50 hover:text-slate-100 disabled:opacity-40"
+            disabled={selectedProjectName === null || refreshMutation.isPending}
+            onClick={() => {
+              if (selectedProjectName !== null) {
+                clearGraphViewportForProject(selectedProjectName);
+                markGraphViewportApplied(null);
+              }
+              refreshMutation.mutate();
+            }}
+            type="button"
+          >
+            <RefreshCw className="h-3.5 w-3.5" aria-hidden />
+            Refresh
+          </button>
+        ) : null}
         <button
           className="flex shrink-0 items-center gap-2 rounded-md border border-surface-light px-3 py-2 text-xs font-medium text-slate-400 hover:border-red-500/50 hover:text-red-200 disabled:opacity-40"
           disabled={disconnectMutation.isPending}
