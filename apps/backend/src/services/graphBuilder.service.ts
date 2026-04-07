@@ -18,6 +18,12 @@ import type { AzdoProject, AzdoRepository } from "@/types/azdo.types";
 
 const log = createLogger("GraphBuilder");
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 function repoNodeId(repoId: string): string {
   return `repo:${repoId}`;
 }
@@ -58,6 +64,29 @@ function nodeIdForMaps(maps: IdentityResolutionMaps, legacyOrGraphDescriptor: st
     return maps.legacyToGraph.get(legacy) ?? legacy;
   }
   return legacyOrGraphDescriptor;
+}
+
+/**
+ * Graph `Memberships` API requires a graph subject descriptor (`vssgp.`, `msa.`, `aad.`, …).
+ * Node ids may still be legacy `Microsoft.TeamFoundation.Identity;...` when IMS omits `subjectDescriptor`.
+ */
+function graphSubjectForMembershipApi(
+  maps: IdentityResolutionMaps,
+  nodeId: string
+): string | null {
+  if (!nodeId.startsWith("Microsoft.")) {
+    return nodeId;
+  }
+  const mapped = maps.legacyToGraph.get(nodeId);
+  if (mapped !== undefined && mapped.length > 0) {
+    return mapped;
+  }
+  const entry = maps.index.get(nodeId);
+  const sd = entry?.identity.subjectDescriptor;
+  if (sd !== undefined && sd.length > 0) {
+    return sd;
+  }
+  return null;
 }
 
 function classifyNodeType(
@@ -154,8 +183,12 @@ export class GraphBuilderService {
       aclRootTokenCount: Object.keys(aclRecord).length,
     });
 
-    const groupSubjects = new Set(groups.map((g) => g.subjectDescriptor));
-    const userSubjects = new Set(users.map((u) => u.subjectDescriptor));
+    const groupSubjects = new Set(
+      groups.map((g) => g.subjectDescriptor ?? g.descriptor)
+    );
+    const userSubjects = new Set(
+      users.map((u) => u.subjectDescriptor ?? u.descriptor)
+    );
 
     const aceDescriptors = new Set<string>();
     for (const acl of Object.values(aclRecord)) {
@@ -254,10 +287,35 @@ export class GraphBuilderService {
     });
 
     if (subjectsNeedingMembership.size > 0) {
-      const membershipMap = await this.graphService.getCachedMembershipMap([
-        ...subjectsNeedingMembership,
-      ]);
-      for (const [memberId, containers] of membershipMap.entries()) {
+      const nodeIdsByApiSubject = new Map<string, string[]>();
+      let skippedMembershipNoGraphSubject = 0;
+      for (const nodeId of subjectsNeedingMembership) {
+        const apiSubject = graphSubjectForMembershipApi(maps, nodeId);
+        if (apiSubject === null) {
+          skippedMembershipNoGraphSubject += 1;
+          continue;
+        }
+        const list = nodeIdsByApiSubject.get(apiSubject) ?? [];
+        list.push(nodeId);
+        nodeIdsByApiSubject.set(apiSubject, list);
+      }
+      if (skippedMembershipNoGraphSubject > 0) {
+        log.debug("graph.build.membership_skip_legacy_only", {
+          skippedCount: skippedMembershipNoGraphSubject,
+        });
+      }
+
+      const membershipByNodeId = new Map<string, readonly string[]>();
+      for (const [apiSubject, nodeIds] of nodeIdsByApiSubject.entries()) {
+        const memberships = await this.graphService.fetchMembershipsUp(apiSubject);
+        const containers = memberships.map((m) => m.containerDescriptor);
+        for (const nodeId of nodeIds) {
+          membershipByNodeId.set(nodeId, containers);
+        }
+        await sleep(100);
+      }
+
+      for (const [memberId, containers] of membershipByNodeId.entries()) {
         if (!subjectsNeedingMembership.has(memberId)) {
           continue;
         }
@@ -284,7 +342,11 @@ export class GraphBuilderService {
         if (!groupSubjects.has(groupId)) {
           continue;
         }
-        const parents = await this.graphService.fetchMembershipsUp(groupId);
+        const groupApiSubject = graphSubjectForMembershipApi(maps, groupId);
+        if (groupApiSubject === null) {
+          continue;
+        }
+        const parents = await this.graphService.fetchMembershipsUp(groupApiSubject);
         for (const m of parents) {
           addNode({
             id: m.containerDescriptor,
@@ -404,10 +466,10 @@ export class GraphBuilderService {
     const finalBits = combinedAllow & ~combinedDeny;
     const effectiveNames = gitNs.actions
       .filter((a) => (finalBits & a.bit) === a.bit)
-      .map((a) => a.displayName);
+      .map((a) => a.displayName ?? a.name);
     const deniedNames = gitNs.actions
       .filter((a) => (combinedDeny & a.bit) === a.bit)
-      .map((a) => a.displayName);
+      .map((a) => a.displayName ?? a.name);
 
     const hasRead =
       (finalBits & GIT_PERMISSIONS.GenericRead) === GIT_PERMISSIONS.GenericRead;

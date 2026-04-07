@@ -21,8 +21,12 @@ function sleep(ms: number): Promise<void> {
   });
 }
 
-function parseEach<T>(items: unknown[], itemSchema: z.ZodType<T>, context: string): T[] {
-  const out: T[] = [];
+function parseEach<TSchema extends z.ZodTypeAny>(
+  items: unknown[],
+  itemSchema: TSchema,
+  context: string
+): z.infer<TSchema>[] {
+  const out: z.infer<TSchema>[] = [];
   for (let i = 0; i < items.length; i += 1) {
     const parsed = itemSchema.safeParse(items[i]);
     if (!parsed.success) {

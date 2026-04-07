@@ -10,23 +10,36 @@ export const AzdoProjectSchema = z.object({
 
 export type AzdoProject = z.infer<typeof AzdoProjectSchema>;
 
-export const AzdoGroupSchema = z.object({
-  subjectDescriptor: z.string(),
+const AzdoGroupRawSchema = z.object({
+  /** Graph list returns `descriptor`; `subjectDescriptor` may be absent. */
+  subjectDescriptor: z.string().optional(),
   principalName: z.string(),
   displayName: z.string(),
   descriptor: z.string(),
   origin: z.string(),
+  mailAddress: z.union([z.string(), z.null()]).optional(),
 });
+
+export const AzdoGroupSchema = AzdoGroupRawSchema.transform((g) => ({
+  ...g,
+  mailAddress: g.mailAddress ?? "",
+}));
 
 export type AzdoGroup = z.infer<typeof AzdoGroupSchema>;
 
-export const AzdoUserSchema = z.object({
-  subjectDescriptor: z.string(),
+const AzdoUserRawSchema = z.object({
+  /** Graph list returns `descriptor`; `subjectDescriptor` may be absent. */
+  subjectDescriptor: z.string().optional(),
   principalName: z.string(),
   displayName: z.string(),
-  mailAddress: z.string(),
+  mailAddress: z.union([z.string(), z.null()]).optional(),
   descriptor: z.string(),
 });
+
+export const AzdoUserSchema = AzdoUserRawSchema.transform((u) => ({
+  ...u,
+  mailAddress: u.mailAddress ?? "",
+}));
 
 export type AzdoUser = z.infer<typeof AzdoUserSchema>;
 
@@ -75,18 +88,26 @@ export const AzdoAclSchema = z.object({
 export type AzdoAcl = z.infer<typeof AzdoAclSchema>;
 
 export const AzdoNamespaceActionSchema = z.object({
-  bit: z.number(),
+  bit: z.coerce.number(),
   name: z.string(),
-  displayName: z.string(),
+  /** Some org/API versions omit this; fall back to `name` when decoding. */
+  displayName: z.string().optional(),
+  namespaceId: z.string().optional(),
 });
 
 export type AzdoNamespaceAction = z.infer<typeof AzdoNamespaceActionSchema>;
 
-export const AzdoSecurityNamespaceSchema = z.object({
+const AzdoSecurityNamespaceRawSchema = z.object({
   namespaceId: z.string(),
   name: z.string(),
-  actions: z.array(AzdoNamespaceActionSchema),
+  displayName: z.string().optional(),
+  actions: z.array(AzdoNamespaceActionSchema).optional().nullable(),
 });
+
+export const AzdoSecurityNamespaceSchema = AzdoSecurityNamespaceRawSchema.transform((n) => ({
+  ...n,
+  actions: n.actions ?? [],
+}));
 
 export type AzdoSecurityNamespace = z.infer<typeof AzdoSecurityNamespaceSchema>;
 

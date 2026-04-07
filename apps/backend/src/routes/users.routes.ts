@@ -25,7 +25,7 @@ export function createUsersRouter(graphService: GraphService): Router {
       res.json({
         project: query.project,
         users: users.map((u) => ({
-          id: u.subjectDescriptor,
+          id: u.subjectDescriptor ?? u.descriptor,
           displayName: u.displayName,
           principalName: u.principalName,
           mailAddress: u.mailAddress,
