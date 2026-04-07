@@ -14,12 +14,14 @@ import {
 import { useCallback, useEffect, useMemo, type MouseEvent } from "react";
 import { useShallow } from "zustand/react/shallow";
 
-import { useGraph } from "@/api/insightops.api";
+import { useGraph, useTrace } from "@/api/insightops.api";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { filterGraphForViewMode } from "@/lib/graphViewFilter";
 import { createLogger } from "@/utils/logger";
 import type { AccessGraph, NodeType } from "@/types/graph.types";
 import { useVisualizerStore } from "@/stores/visualizer.store";
-import { layoutForcePlaceholder, layoutWithDagreLR } from "@/utils/dagreLayout";
+import { layoutWithDagreLR } from "@/utils/dagreLayout";
+import { GRAPH_NODE_COLORS } from "@/theme/graphColors";
 import { isGraphNodeSelected, repoIdFromNodeId } from "@/utils/graphIds";
 
 import { GroupNode } from "./GroupNode";
@@ -36,6 +38,8 @@ const nodeTypes: NodeTypes = {
 const edgeTypes: EdgeTypes = {
   permission: PermissionEdge,
 };
+
+const defaultEdgeOptions = { type: "permission" as const };
 
 const canvasLog = createLogger("GraphCanvas");
 
@@ -121,9 +125,7 @@ function patchNodeVisualState(
     selectedRepoId
   );
   const dimmed =
-    hoveredNodeId !== null &&
-    hoveredNodeId !== node.id &&
-    !selected;
+    hoveredNodeId !== null && hoveredNodeId !== node.id && !selected;
 
   return {
     ...node,
@@ -139,10 +141,14 @@ function GraphCanvasInner(): JSX.Element {
   const selectedProjectName = useVisualizerStore((s) => s.selectedProjectName);
   const filterText = useVisualizerStore((s) => s.filterText);
   const showOnlyOverPrivileged = useVisualizerStore((s) => s.showOnlyOverPrivileged);
-  const layoutMode = useVisualizerStore((s) => s.layoutMode);
+  const graphViewMode = useVisualizerStore((s) => s.graphViewMode);
   const setSelectedUser = useVisualizerStore((s) => s.setSelectedUser);
   const setSelectedRepo = useVisualizerStore((s) => s.setSelectedRepo);
   const setHoveredNode = useVisualizerStore((s) => s.setHoveredNode);
+  const setHoveredEdge = useVisualizerStore((s) => s.setHoveredEdge);
+  const setInspector = useVisualizerStore((s) => s.setInspector);
+  const setFilterText = useVisualizerStore((s) => s.setFilterText);
+  const toggleOverPrivileged = useVisualizerStore((s) => s.toggleOverPrivileged);
 
   const debouncedFilter = useDebouncedValue(filterText, 300);
   const filterLower = useMemo(
@@ -151,36 +157,59 @@ function GraphCanvasInner(): JSX.Element {
   );
 
   const graphQuery = useGraph(selectedProjectName);
+  const { selectedUserId, selectedRepoId, hoveredNodeId } = useVisualizerStore(
+    useShallow((s) => ({
+      selectedUserId: s.selectedUserId,
+      selectedRepoId: s.selectedRepoId,
+      hoveredNodeId: s.hoveredNodeId,
+    }))
+  );
+
+  const traceQuery = useTrace(selectedProjectName, selectedUserId, selectedRepoId);
+
+  const viewGraph = useMemo(() => {
+    if (graphQuery.data === undefined) {
+      return undefined;
+    }
+    return filterGraphForViewMode(graphQuery.data, graphViewMode, {
+      selectedUserId,
+      selectedRepoId,
+      trace: traceQuery.data,
+    });
+  }, [
+    graphQuery.data,
+    graphViewMode,
+    selectedRepoId,
+    selectedUserId,
+    traceQuery.data,
+  ]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
   useEffect(() => {
-    if (graphQuery.data === undefined) {
+    if (viewGraph === undefined) {
       return;
     }
 
     const { nodes: baseNodes, edges: baseEdges } = toBaseFlowElements(
-      graphQuery.data,
+      viewGraph,
       filterLower,
       showOnlyOverPrivileged
     );
 
     canvasLog.debug("graph.canvas.filtered", {
-      projectName: graphQuery.data.projectName,
-      rawNodeCount: graphQuery.data.nodes.length,
-      rawEdgeCount: graphQuery.data.edges.length,
+      projectName: viewGraph.projectName,
+      rawNodeCount: viewGraph.nodes.length,
+      rawEdgeCount: viewGraph.edges.length,
       filteredNodeCount: baseNodes.length,
       filteredEdgeCount: baseEdges.length,
-      layoutMode,
+      graphViewMode,
       filterActive: filterLower.length > 0,
       overPrivilegedOnly: showOnlyOverPrivileged,
     });
 
-    const positioned =
-      layoutMode === "hierarchical"
-        ? layoutWithDagreLR(baseNodes, baseEdges)
-        : layoutForcePlaceholder(baseNodes);
+    const positioned = layoutWithDagreLR(baseNodes, baseEdges);
 
     const ui = useVisualizerStore.getState();
     setNodes(
@@ -199,21 +228,13 @@ function GraphCanvasInner(): JSX.Element {
       edgeCount: baseEdges.length,
     });
   }, [
-    graphQuery.data,
+    viewGraph,
     filterLower,
     showOnlyOverPrivileged,
-    layoutMode,
+    graphViewMode,
     setNodes,
     setEdges,
   ]);
-
-  const { selectedUserId, selectedRepoId, hoveredNodeId } = useVisualizerStore(
-    useShallow((s) => ({
-      selectedUserId: s.selectedUserId,
-      selectedRepoId: s.selectedRepoId,
-      hoveredNodeId: s.hoveredNodeId,
-    }))
-  );
 
   useEffect(() => {
     setNodes((prev) => {
@@ -231,19 +252,23 @@ function GraphCanvasInner(): JSX.Element {
       if (node.type === "user") {
         const id = node.id;
         const prev = useVisualizerStore.getState().selectedUserId;
+        setInspector(null, null);
         setSelectedUser(prev === id ? null : id);
         return;
       }
       if (node.type === "repo") {
         const rid = repoIdFromNodeId(node.id);
         const prevRepo = useVisualizerStore.getState().selectedRepoId;
+        setInspector(null, null);
         setSelectedRepo(prevRepo === rid ? null : rid);
         return;
       }
-      setSelectedUser(null);
-      setSelectedRepo(null);
+      if (node.type === "group") {
+        setInspector(node.id, "group");
+        return;
+      }
     },
-    [setSelectedRepo, setSelectedUser]
+    [setInspector, setSelectedRepo, setSelectedUser]
   );
 
   const onNodeMouseEnter = useCallback(
@@ -256,6 +281,17 @@ function GraphCanvasInner(): JSX.Element {
   const onNodeMouseLeave = useCallback(() => {
     setHoveredNode(null);
   }, [setHoveredNode]);
+
+  const onEdgeMouseEnter = useCallback(
+    (_: MouseEvent, edge: Edge) => {
+      setHoveredEdge(edge.id);
+    },
+    [setHoveredEdge]
+  );
+
+  const onEdgeMouseLeave = useCallback(() => {
+    setHoveredEdge(null);
+  }, [setHoveredEdge]);
 
   if (selectedProjectName === null) {
     return (
@@ -287,10 +323,22 @@ function GraphCanvasInner(): JSX.Element {
 
   if (nodes.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-surface text-slate-400">
-        <p className="max-w-sm text-center text-sm">
-          No nodes match the current filters, or the graph is empty for this project.
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-surface px-6 text-center text-slate-400">
+        <p className="max-w-sm text-sm">
+          No nodes match the current filters, or the graph is empty for this view.
         </p>
+        <button
+          className="rounded-md border border-surface-light px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-surface-light/40"
+          onClick={() => {
+            setFilterText("");
+            if (showOnlyOverPrivileged) {
+              toggleOverPrivileged();
+            }
+          }}
+          type="button"
+        >
+          Clear filters
+        </button>
       </div>
     );
   }
@@ -298,13 +346,15 @@ function GraphCanvasInner(): JSX.Element {
   return (
     <div className="relative min-h-0 flex-1 bg-surface">
       <ReactFlow
-        defaultEdgeOptions={{ type: "permission" }}
+        defaultEdgeOptions={defaultEdgeOptions}
         edges={edges}
         edgeTypes={edgeTypes}
         fitView
         fitViewOptions={{ padding: 0.2 }}
         nodes={nodes}
         nodeTypes={nodeTypes}
+        onEdgeMouseEnter={onEdgeMouseEnter}
+        onEdgeMouseLeave={onEdgeMouseLeave}
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
         onNodeMouseEnter={onNodeMouseEnter}
@@ -315,19 +365,19 @@ function GraphCanvasInner(): JSX.Element {
         <Background color="#3f3f5a" gap={20} />
         <Controls className="!bg-surface-light !border-surface-light !shadow-lg [&_button]:!fill-slate-200" />
         <MiniMap
-          className="!rounded-md !border !border-surface-light !bg-surface-light/90"
+          className="!rounded-md !border !border-surface-light !bg-surface-light/90 hidden lg:block"
           maskColor="rgb(30, 30, 46, 0.65)"
           nodeColor={(n) => {
             if (n.type === "user") {
-              return "#3b82f6";
+              return GRAPH_NODE_COLORS.user;
             }
             if (n.type === "group") {
-              return "#8b5cf6";
+              return GRAPH_NODE_COLORS.group;
             }
             if (n.type === "repo") {
-              return "#10b981";
+              return GRAPH_NODE_COLORS.repo;
             }
-            return "#64748b";
+            return GRAPH_NODE_COLORS.fallback;
           }}
           pannable
           zoomable

@@ -1,7 +1,8 @@
 import { Router, type Request, type Response } from "express";
 import { z } from "zod";
+
+import type { IInsightOpsBundle } from "@/composition/createInsightOpsBundle";
 import { asyncHandler } from "@/middleware/asyncHandler";
-import type { GraphBuilderService } from "@/services/graphBuilder.service";
 
 const TraceQuerySchema = z.object({
   project: z.string().min(1, "project is required"),
@@ -9,14 +10,14 @@ const TraceQuerySchema = z.object({
   repoId: z.string().min(1, "repoId is required"),
 });
 
-export function createTraceRouter(graphBuilder: GraphBuilderService): Router {
+export function createTraceRouter(getBundle: (req: Request) => IInsightOpsBundle): Router {
   const router = Router();
 
   router.get(
     "/",
     asyncHandler(async (req: Request, res: Response) => {
       const query = TraceQuerySchema.parse(req.query);
-      const trace = await graphBuilder.traceAccess(
+      const trace = await getBundle(req).graphBuilder.traceAccess(
         query.project,
         query.userId,
         query.repoId

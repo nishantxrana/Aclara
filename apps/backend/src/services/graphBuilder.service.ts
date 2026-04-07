@@ -1,3 +1,5 @@
+import axios from "axios";
+
 import { ACL_TOKEN, GIT_PERMISSIONS } from "@/constants/azdo.constants";
 import { HttpError } from "@/errors/httpError";
 import { createLogger } from "@/lib/logger";
@@ -144,12 +146,14 @@ export class GraphBuilderService {
     project: AzdoProject,
     repoId: string
   ): Promise<AzdoRepository> {
-    const repos = await this.gitService.listRepositories(project.name);
-    const repo = repos.find((r) => r.id === repoId);
-    if (repo === undefined) {
-      throw new HttpError(`Repository not found in project: ${repoId}`, 404);
+    try {
+      return await this.gitService.getRepository(project.name, repoId);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.status === 404) {
+        throw new HttpError(`Repository not found in project: ${repoId}`, 404);
+      }
+      throw err;
     }
-    return repo;
   }
 
   /**
@@ -221,8 +225,12 @@ export class GraphBuilderService {
         type: "repo",
         label: repo.name,
         metadata: {
-          remoteUrl: repo.remoteUrl,
-          defaultBranch: repo.defaultBranch,
+          ...(repo.remoteUrl !== undefined && repo.remoteUrl.length > 0
+            ? { remoteUrl: repo.remoteUrl }
+            : {}),
+          ...(repo.defaultBranch !== undefined && repo.defaultBranch.length > 0
+            ? { defaultBranch: repo.defaultBranch }
+            : {}),
         },
       });
     }
@@ -312,7 +320,6 @@ export class GraphBuilderService {
         for (const nodeId of nodeIds) {
           membershipByNodeId.set(nodeId, containers);
         }
-        await sleep(100);
       }
 
       for (const [memberId, containers] of membershipByNodeId.entries()) {

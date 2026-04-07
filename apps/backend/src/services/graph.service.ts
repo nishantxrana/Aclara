@@ -39,18 +39,23 @@ function parseEach<TSchema extends z.ZodTypeAny>(
 
 const log = createLogger("GraphService");
 
-function membershipMapCacheKey(org: string, subjects: readonly string[]): string {
+function membershipMapCacheKey(cacheNs: string, subjects: readonly string[]): string {
   const payload = [...subjects].sort().join("\0");
   const hash = createHash("sha256").update(payload).digest("hex");
-  return `${org}:membershipMap:${hash}`;
+  return `${cacheNs}:membershipMap:${hash}`;
 }
 
 /**
  * Graph and project listing: cached projects, groups, users; membership helpers; transitive group BFS.
  */
 export class GraphService {
+  /** In-session dedupe of Memberships/{subject} responses (same subject queried from graph build + trace). */
+  private readonly membershipsUpMemo = new Map<string, readonly AzdoMembership[]>();
+
   constructor(
     private readonly org: string,
+    /** Namespace for shared TTL caches (org + credential fingerprint). */
+    private readonly cacheNs: string,
     private readonly client: AzureDevOpsClient,
     private readonly projectsCache: Cache<AzdoProject[]>,
     private readonly groupsCache: Cache<AzdoGroup[]>,
@@ -62,7 +67,7 @@ export class GraphService {
    * Lists all projects for the org (paginated, cached).
    */
   async listProjects(): Promise<readonly AzdoProject[]> {
-    const cacheKey = `${this.org}:projects`;
+    const cacheKey = `${this.cacheNs}:projects`;
     const hit = this.projectsCache.get(cacheKey);
     if (hit !== null) {
       log.debug("graph.list_projects.cache_hit", { count: hit.length });
@@ -84,7 +89,7 @@ export class GraphService {
    * Lists all graph groups (paginated, cached).
    */
   async listAllGroups(): Promise<readonly AzdoGroup[]> {
-    const cacheKey = `${this.org}:graph:groups`;
+    const cacheKey = `${this.cacheNs}:graph:groups`;
     const hit = this.groupsCache.get(cacheKey);
     if (hit !== null) {
       log.debug("graph.list_groups.cache_hit", { count: hit.length });
@@ -106,7 +111,7 @@ export class GraphService {
    * Lists all graph users (paginated, cached).
    */
   async listAllUsers(): Promise<readonly AzdoUser[]> {
-    const cacheKey = `${this.org}:graph:users`;
+    const cacheKey = `${this.cacheNs}:graph:users`;
     const hit = this.usersCache.get(cacheKey);
     if (hit !== null) {
       log.debug("graph.list_users.cache_hit", { count: hit.length });
@@ -125,9 +130,13 @@ export class GraphService {
   }
 
   /**
-   * Fetches direct parent containers for a subject (Graph direction Up — groups the subject is a member of). Not cached.
+   * Fetches direct parent containers for a subject (Graph direction Up). Deduplicated per service instance.
    */
   async fetchMembershipsUp(subjectDescriptor: string): Promise<readonly AzdoMembership[]> {
+    const memoHit = this.membershipsUpMemo.get(subjectDescriptor);
+    if (memoHit !== undefined) {
+      return memoHit;
+    }
     const graph = this.client.getGraphUrl();
     const path = encodeURIComponent(subjectDescriptor);
     const url = `${graph}/_apis/graph/Memberships/${path}`;
@@ -135,7 +144,10 @@ export class GraphService {
       "api-version": GRAPH_API_VERSION,
       direction: "up",
     });
-    return parseEach(rawPages, AzdoMembershipSchema, "fetchMembershipsUp");
+    const memberships = parseEach(rawPages, AzdoMembershipSchema, "fetchMembershipsUp");
+    this.membershipsUpMemo.set(subjectDescriptor, memberships);
+    await sleep(100);
+    return memberships;
   }
 
   /**
@@ -145,7 +157,7 @@ export class GraphService {
   async getCachedMembershipMap(
     subjectDescriptors: readonly string[]
   ): Promise<ReadonlyMap<string, readonly string[]>> {
-    const cacheKey = membershipMapCacheKey(this.org, subjectDescriptors);
+    const cacheKey = membershipMapCacheKey(this.cacheNs, subjectDescriptors);
     const hit = this.membershipMapCache.get(cacheKey);
     if (hit !== null) {
       log.debug("graph.membership_map.cache_hit", {
@@ -159,7 +171,6 @@ export class GraphService {
       const memberships = await this.fetchMembershipsUp(subject);
       const containers = memberships.map((m) => m.containerDescriptor);
       map.set(subject, [...containers]);
-      await sleep(100);
     }
 
     const frozen = new Map<string, readonly string[]>(

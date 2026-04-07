@@ -6,7 +6,9 @@ import {
 } from "@xyflow/react";
 import { memo } from "react";
 
+import { PERMISSION_EDGE_STROKE } from "@/theme/graphColors";
 import type { PermissionLevel } from "@/types/graph.types";
+import { useVisualizerStore } from "@/stores/visualizer.store";
 
 export interface IPermissionEdgeData extends Record<string, unknown> {
   level: PermissionLevel;
@@ -14,19 +16,7 @@ export interface IPermissionEdgeData extends Record<string, unknown> {
 }
 
 function strokeForLevel(level: PermissionLevel): string {
-  switch (level) {
-    case "allow":
-      return "#22c55e";
-    case "deny":
-      return "#ef4444";
-    case "inherited-allow":
-      return "#4ade80";
-    case "inherited-deny":
-      return "#f87171";
-    case "not-set":
-    default:
-      return "#64748b";
-  }
+  return PERMISSION_EDGE_STROKE[level] ?? PERMISSION_EDGE_STROKE["not-set"] ?? "#64748b";
 }
 
 function dashForLevel(level: PermissionLevel): string | undefined {
@@ -40,6 +30,9 @@ function dashForLevel(level: PermissionLevel): string | undefined {
 }
 
 function PermissionEdgeComponent(props: EdgeProps): JSX.Element {
+  const hoveredEdgeId = useVisualizerStore((s) => s.hoveredEdgeId);
+  const showLabel = hoveredEdgeId === props.id;
+
   const raw = props.data as IPermissionEdgeData | undefined;
   const level: PermissionLevel = raw?.level ?? "not-set";
   const permission = raw?.permission ?? "";
@@ -67,16 +60,15 @@ function PermissionEdgeComponent(props: EdgeProps): JSX.Element {
           strokeDasharray,
         }}
       />
-      {permission.length > 0 ? (
+      {permission.length > 0 && showLabel ? (
         <EdgeLabelRenderer>
           <div
-            className="nodrag nopan max-w-[140px] truncate rounded bg-surface/90 px-1.5 py-0.5 text-[10px] font-medium text-slate-300 shadow-sm"
+            className="nodrag nopan max-w-[160px] truncate rounded border border-surface-light bg-surface/95 px-1.5 py-0.5 text-[10px] font-medium text-slate-300 shadow-sm pointer-events-none"
             style={{
               position: "absolute",
               transform: `translate(-50%, -50%) translate(${String(labelX)}px,${String(
                 labelY
               )}px)`,
-              pointerEvents: "all",
             }}
             title={permission}
           >

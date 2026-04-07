@@ -1,35 +1,46 @@
 import { Router, type Request, type Response } from "express";
 import { z } from "zod";
+
+import type { IInsightOpsBundle } from "@/composition/createInsightOpsBundle";
 import { HttpError } from "@/errors/httpError";
 import { asyncHandler } from "@/middleware/asyncHandler";
-import type { GraphService } from "@/services/graph.service";
+import { usersFromAccessGraph } from "@/services/graphDerivedLists.service";
+import type { ProjectSnapshotService } from "@/services/projectSnapshot.service";
 
 const ProjectQuerySchema = z.object({
   project: z.string().min(1, "project is required"),
 });
 
-export function createUsersRouter(graphService: GraphService): Router {
+export interface IUsersRouterDeps {
+  readonly getBundle: (req: Request) => IInsightOpsBundle;
+  readonly getSessionId: (req: Request) => string;
+  readonly snapshotService: ProjectSnapshotService;
+}
+
+export function createUsersRouter(deps: IUsersRouterDeps): Router {
   const router = Router();
 
   router.get(
     "/",
     asyncHandler(async (req: Request, res: Response) => {
       const query = ProjectQuerySchema.parse(req.query);
-      const projects = await graphService.listProjects();
+      const bundle = deps.getBundle(req);
+      const projects = await bundle.graphService.listProjects();
       const exists = projects.some((p) => p.name === query.project);
       if (!exists) {
         throw new HttpError(`Project not found: ${query.project}`, 404);
       }
-
-      const users = await graphService.listAllUsers();
+      const nocache = req.query.nocache === "1" || req.query.nocache === "true";
+      const snapshotKey = `${deps.getSessionId(req)}:${query.project}`;
+      const graph = await deps.snapshotService.getAccessGraph(
+        snapshotKey,
+        nocache,
+        () => bundle.graphBuilder.buildAccessGraph(query.project)
+      );
+      const users = usersFromAccessGraph(graph);
       res.json({
         project: query.project,
-        users: users.map((u) => ({
-          id: u.subjectDescriptor ?? u.descriptor,
-          displayName: u.displayName,
-          principalName: u.principalName,
-          mailAddress: u.mailAddress,
-        })),
+        users,
       });
     })
   );

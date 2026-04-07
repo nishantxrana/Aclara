@@ -1,7 +1,14 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { RefreshCw } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { LogOut, RefreshCw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-import { QUERY_KEYS, useGraph, useProjects } from "@/api/insightops.api";
+import {
+  QUERY_KEYS,
+  disconnectSession,
+  refreshProjectData,
+  useProjects,
+  useSessionStatus,
+} from "@/api/insightops.api";
 import { useVisualizerStore } from "@/stores/visualizer.store";
 
 function formatSyncedAt(iso: string | undefined): string {
@@ -19,14 +26,21 @@ function formatSyncedAt(iso: string | undefined): string {
 }
 
 export function Header(): JSX.Element {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const sessionQuery = useSessionStatus();
   const projectsQuery = useProjects();
   const selectedProjectName = useVisualizerStore((s) => s.selectedProjectName);
   const setSelectedProject = useVisualizerStore((s) => s.setSelectedProject);
   const setSelectedUser = useVisualizerStore((s) => s.setSelectedUser);
   const setSelectedRepo = useVisualizerStore((s) => s.setSelectedRepo);
 
-  const graphQuery = useGraph(selectedProjectName);
+  const graphData =
+    selectedProjectName !== null
+      ? queryClient.getQueryData<{ generatedAt?: string; nodes?: unknown[] }>(
+          QUERY_KEYS.graph(selectedProjectName)
+        )
+      : undefined;
 
   const onProjectChange = (name: string) => {
     if (name.length === 0) {
@@ -45,24 +59,53 @@ export function Header(): JSX.Element {
     setSelectedRepo(null);
   };
 
-  const onRefresh = (): void => {
-    if (selectedProjectName === null) {
-      return;
-    }
-    void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.projects });
-    void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.graph(selectedProjectName) });
-    void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users(selectedProjectName) });
-    void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.repos(selectedProjectName) });
-  };
+  const refreshMutation = useMutation({
+    mutationFn: async () => {
+      if (selectedProjectName === null) {
+        return;
+      }
+      const { graph, users, repos } = await refreshProjectData(selectedProjectName);
+      queryClient.setQueryData(QUERY_KEYS.graph(selectedProjectName), graph);
+      queryClient.setQueryData(QUERY_KEYS.users(selectedProjectName), users);
+      queryClient.setQueryData(QUERY_KEYS.repos(selectedProjectName), repos);
+    },
+  });
+
+  const disconnectMutation = useMutation({
+    mutationFn: async () => {
+      await disconnectSession();
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.sessionStatus });
+    },
+    onSuccess: () => {
+      queryClient.removeQueries();
+      navigate("/connect", { replace: true });
+    },
+  });
 
   const nodeCount =
-    graphQuery.data !== undefined ? graphQuery.data.nodes.length : null;
+    graphData !== undefined && Array.isArray(graphData.nodes)
+      ? graphData.nodes.length
+      : null;
+
+  let connectionLabel: string | null = null;
+  if (sessionQuery.data?.connected === true) {
+    if (sessionQuery.data.source === "env") {
+      connectionLabel = "Connected (server env)";
+    } else {
+      connectionLabel = "Connected (session)";
+    }
+  }
 
   return (
-    <header className="flex shrink-0 items-center gap-4 border-b border-surface-light bg-surface-light/40 px-4 py-3">
-      <span className="text-lg font-semibold tracking-tight text-primary">
-        InsightOps
-      </span>
+    <header className="flex shrink-0 flex-wrap items-center gap-4 border-b border-surface-light bg-surface-light/40 px-4 py-3">
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="text-lg font-semibold tracking-tight text-primary">InsightOps</span>
+        {connectionLabel !== null ? (
+          <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
+            {connectionLabel}
+          </span>
+        ) : null}
+      </div>
 
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
         {projectsQuery.isPending ? (
@@ -103,22 +146,37 @@ export function Header(): JSX.Element {
             <span className="hidden sm:inline">
               Last sync:{" "}
               <span className="font-medium text-slate-300">
-                {formatSyncedAt(graphQuery.data?.generatedAt)}
+                {formatSyncedAt(graphData?.generatedAt)}
               </span>
             </span>
           </div>
         ) : null}
       </div>
 
-      <button
-        className="flex shrink-0 items-center gap-2 rounded-md border border-surface-light px-3 py-2 text-xs font-medium text-slate-300 hover:border-primary/50 hover:text-slate-100 disabled:opacity-40"
-        disabled={selectedProjectName === null}
-        onClick={onRefresh}
-        type="button"
-      >
-        <RefreshCw className="h-3.5 w-3.5" aria-hidden />
-        Refresh
-      </button>
+      <div className="flex shrink-0 flex-wrap items-center gap-2">
+        <button
+          className="flex shrink-0 items-center gap-2 rounded-md border border-surface-light px-3 py-2 text-xs font-medium text-slate-300 hover:border-primary/50 hover:text-slate-100 disabled:opacity-40"
+          disabled={selectedProjectName === null || refreshMutation.isPending}
+          onClick={() => {
+            refreshMutation.mutate();
+          }}
+          type="button"
+        >
+          <RefreshCw className="h-3.5 w-3.5" aria-hidden />
+          Refresh
+        </button>
+        <button
+          className="flex shrink-0 items-center gap-2 rounded-md border border-surface-light px-3 py-2 text-xs font-medium text-slate-400 hover:border-red-500/50 hover:text-red-200 disabled:opacity-40"
+          disabled={disconnectMutation.isPending}
+          onClick={() => {
+            disconnectMutation.mutate();
+          }}
+          type="button"
+        >
+          <LogOut className="h-3.5 w-3.5" aria-hidden />
+          Disconnect
+        </button>
+      </div>
     </header>
   );
 }

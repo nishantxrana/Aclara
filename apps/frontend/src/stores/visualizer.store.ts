@@ -1,7 +1,11 @@
 import { create, type StateCreator } from "zustand";
 import { devtools } from "zustand/middleware";
 
-export type LayoutMode = "hierarchical" | "force";
+import type { GraphViewMode } from "@/lib/graphViewFilter";
+
+export type ExplorerTab = "users" | "repos" | "risks";
+
+export type WorkspaceView = "overview" | "investigate";
 
 export interface VisualizerState {
   selectedProject: string | null;
@@ -9,9 +13,16 @@ export interface VisualizerState {
   selectedUserId: string | null;
   selectedRepoId: string | null;
   hoveredNodeId: string | null;
+  hoveredEdgeId: string | null;
   filterText: string;
   showOnlyOverPrivileged: boolean;
-  layoutMode: LayoutMode;
+  graphViewMode: GraphViewMode;
+  explorerTab: ExplorerTab;
+  /** Right-side inspector for group/user/repo metadata (non-trace). */
+  inspectorNodeId: string | null;
+  inspectorNodeType: "user" | "group" | "repo" | null;
+  tracePanelWidthPx: number;
+  workspaceView: WorkspaceView;
 }
 
 export interface VisualizerActions {
@@ -19,9 +30,14 @@ export interface VisualizerActions {
   setSelectedUser: (id: string | null) => void;
   setSelectedRepo: (id: string | null) => void;
   setHoveredNode: (id: string | null) => void;
+  setHoveredEdge: (id: string | null) => void;
   setFilterText: (text: string) => void;
   toggleOverPrivileged: () => void;
-  setLayoutMode: (mode: LayoutMode) => void;
+  setGraphViewMode: (mode: GraphViewMode) => void;
+  setExplorerTab: (tab: ExplorerTab) => void;
+  setInspector: (nodeId: string | null, nodeType: "user" | "group" | "repo" | null) => void;
+  setTracePanelWidthPx: (w: number) => void;
+  setWorkspaceView: (view: WorkspaceView) => void;
   clearSelection: () => void;
 }
 
@@ -33,9 +49,15 @@ const storeCreator: StateCreator<VisualizerStore> = (set) => ({
   selectedUserId: null,
   selectedRepoId: null,
   hoveredNodeId: null,
+  hoveredEdgeId: null,
   filterText: "",
   showOnlyOverPrivileged: false,
-  layoutMode: "hierarchical",
+  graphViewMode: "overview",
+  explorerTab: "users",
+  inspectorNodeId: null,
+  inspectorNodeType: null,
+  tracePanelWidthPx: 320,
+  workspaceView: "investigate",
 
   setSelectedProject: (id, name) =>
     set({ selectedProject: id, selectedProjectName: name }),
@@ -46,19 +68,33 @@ const storeCreator: StateCreator<VisualizerStore> = (set) => ({
 
   setHoveredNode: (id) => set({ hoveredNodeId: id }),
 
+  setHoveredEdge: (id) => set({ hoveredEdgeId: id }),
+
   setFilterText: (text) => set({ filterText: text }),
 
   toggleOverPrivileged: () =>
     set((state) => ({ showOnlyOverPrivileged: !state.showOnlyOverPrivileged })),
 
-  setLayoutMode: (mode) => set({ layoutMode: mode }),
+  setGraphViewMode: (mode) => set({ graphViewMode: mode }),
 
-  /** Clears trace targets and hover only; keeps project and filters. */
+  setExplorerTab: (tab) => set({ explorerTab: tab }),
+
+  setInspector: (nodeId, nodeType) =>
+    set({ inspectorNodeId: nodeId, inspectorNodeType: nodeType }),
+
+  setTracePanelWidthPx: (w) => set({ tracePanelWidthPx: w }),
+
+  setWorkspaceView: (view) => set({ workspaceView: view }),
+
+  /** Clears trace targets, inspector, and hover; keeps project and filters. */
   clearSelection: () =>
     set({
       selectedUserId: null,
       selectedRepoId: null,
       hoveredNodeId: null,
+      hoveredEdgeId: null,
+      inspectorNodeId: null,
+      inspectorNodeType: null,
     }),
 });
 

@@ -1,12 +1,22 @@
-import { X } from "lucide-react";
-import { useMemo } from "react";
+import { CheckCircle2, Circle, GripVertical, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 
-import { useRepos, useTrace, useUsers } from "@/api/insightops.api";
+import {
+  ApiHttpError,
+  useRepos,
+  useTrace,
+  useUsers,
+  type RepoSummary,
+  type UserSummary,
+} from "@/api/insightops.api";
 import { useVisualizerStore } from "@/stores/visualizer.store";
 
 import { PermissionChip } from "./PermissionChip";
 import { TraceStep } from "./TraceStep";
+
+const TRACE_PANEL_MIN_W = 260;
+const TRACE_PANEL_MAX_W = 520;
 
 function TracePanelSkeleton(): JSX.Element {
   return (
@@ -33,14 +43,70 @@ function PlaceholderState(props: { message: string; detail?: string }): JSX.Elem
   );
 }
 
+function GuidedChecklist(props: {
+  readonly projectSelected: boolean;
+  readonly hasUser: boolean;
+  readonly hasRepo: boolean;
+}): JSX.Element {
+  if (!props.projectSelected) {
+    return (
+      <PlaceholderState
+        detail="Choose a project in the header to enable tracing."
+        message="No project selected"
+      />
+    );
+  }
+
+  const steps: { done: boolean; label: string }[] = [
+    { done: true, label: "Project selected" },
+    { done: props.hasUser, label: "Select a user" },
+    { done: props.hasRepo, label: "Select a repository" },
+  ];
+
+  let headline = "Start an access trace";
+  let sub =
+    "Pick a user and a repository from the explorer or graph. Order does not matter.";
+
+  if (props.hasUser && !props.hasRepo) {
+    headline = "User selected";
+    sub = "Next, choose a repository to explain this user’s effective Git access.";
+  } else if (props.hasRepo && !props.hasUser) {
+    headline = "Repository selected";
+    sub = "Next, choose a user to see why they do or do not have access.";
+  }
+
+  return (
+    <div className="flex flex-1 flex-col gap-4 p-4">
+      <div>
+        <p className="text-sm font-medium text-slate-200">{headline}</p>
+        <p className="mt-1 text-xs text-slate-500">{sub}</p>
+      </div>
+      <ol className="space-y-2" role="list">
+        {steps.map((s) => (
+          <li className="flex items-start gap-2 text-xs text-slate-400" key={s.label}>
+            {s.done ? (
+              <CheckCircle2 aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+            ) : (
+              <Circle aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-slate-600" />
+            )}
+            <span className={s.done ? "text-slate-300" : ""}>{s.label}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 export function AccessTracePanel(): JSX.Element {
-  const { selectedProjectName, selectedUserId, selectedRepoId, clearSelection } =
+  const { selectedProjectName, selectedUserId, selectedRepoId, clearSelection, tracePanelWidthPx, setTracePanelWidthPx } =
     useVisualizerStore(
       useShallow((s) => ({
         selectedProjectName: s.selectedProjectName,
         selectedUserId: s.selectedUserId,
         selectedRepoId: s.selectedRepoId,
         clearSelection: s.clearSelection,
+        tracePanelWidthPx: s.tracePanelWidthPx,
+        setTracePanelWidthPx: s.setTracePanelWidthPx,
       }))
     );
 
@@ -48,50 +114,79 @@ export function AccessTracePanel(): JSX.Element {
   const reposQuery = useRepos(selectedProjectName);
   const traceQuery = useTrace(selectedProjectName, selectedUserId, selectedRepoId);
 
-  const userSummary = useMemo(() => {
-    if (selectedUserId === null || usersQuery.data === undefined) {
-      return null;
-    }
-    const u = usersQuery.data.find((x) => x.id === selectedUserId);
-    if (u === undefined) {
-      return { title: selectedUserId };
-    }
-    const sub = u.mailAddress ?? u.principalName;
-    return {
-      title: u.displayName,
-      ...(sub !== undefined && sub.length > 0 ? { subtitle: sub } : {}),
-    };
-  }, [selectedUserId, usersQuery.data]);
-
-  const repoSummary = useMemo(() => {
-    if (selectedRepoId === null || reposQuery.data === undefined) {
-      return null;
-    }
-    const r = reposQuery.data.find((x) => x.id === selectedRepoId);
-    if (r === undefined) {
-      return { title: selectedRepoId };
-    }
-    return {
-      title: r.name,
-      ...(r.defaultBranch !== undefined && r.defaultBranch.length > 0
-        ? { branch: r.defaultBranch }
-        : {}),
-    };
-  }, [selectedRepoId, reposQuery.data]);
+  const userSummary = useMemo(
+    () => summarizeUser(selectedUserId, usersQuery.data),
+    [selectedUserId, usersQuery.data]
+  );
+  const repoSummary = useMemo(
+    () => summarizeRepo(selectedRepoId, reposQuery.data),
+    [selectedRepoId, reposQuery.data]
+  );
 
   const hasPair =
     selectedUserId !== null && selectedRepoId !== null && selectedProjectName !== null;
 
-  const panelWide = hasPair;
+  const dragRef = useRef<{ startX: number; startW: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const onResizePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      e.preventDefault();
+      dragRef.current = { startX: e.clientX, startW: tracePanelWidthPx };
+      setIsDragging(true);
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    },
+    [tracePanelWidthPx]
+  );
+
+  useEffect(() => {
+    if (!isDragging) {
+      return;
+    }
+    const onMove = (ev: PointerEvent): void => {
+      const d = dragRef.current;
+      if (d === null) {
+        return;
+      }
+      const delta = d.startX - ev.clientX;
+      const next = Math.min(TRACE_PANEL_MAX_W, Math.max(TRACE_PANEL_MIN_W, d.startW + delta));
+      setTracePanelWidthPx(next);
+    };
+    const onUp = (): void => {
+      dragRef.current = null;
+      setIsDragging(false);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, [isDragging, setTracePanelWidthPx]);
+
+  const traceErrorRequestId =
+    traceQuery.error instanceof ApiHttpError ? traceQuery.error.requestId : undefined;
 
   return (
     <aside
       aria-label="Access trace"
-      className={`flex shrink-0 flex-col border-l border-surface-light bg-surface-light/40 transition-[width] duration-300 ease-out ${
-        panelWide ? "w-[22rem]" : "w-72"
-      }`}
+      className="relative flex shrink-0 flex-col border-l border-surface-light bg-surface-light/40"
+      style={{ width: tracePanelWidthPx }}
     >
-      <div className="flex items-start justify-between gap-2 border-b border-surface-light px-4 py-3">
+      <button
+        aria-label="Resize trace panel"
+        className={`absolute left-0 top-0 z-10 flex h-full w-3 cursor-col-resize items-center justify-center border-r border-transparent hover:border-surface-light ${
+          isDragging ? "bg-surface-light/50" : ""
+        }`}
+        onPointerDown={onResizePointerDown}
+        type="button"
+      >
+        <GripVertical aria-hidden className="h-4 w-4 text-slate-600" />
+      </button>
+
+      <div className="flex items-start justify-between gap-2 border-b border-surface-light py-3 pl-5 pr-4">
         <div className="min-w-0">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Access trace
@@ -115,7 +210,7 @@ export function AccessTracePanel(): JSX.Element {
             </div>
           ) : (
             <p className="mt-1 text-xs text-slate-500">
-              Pick a user and a repository to trace effective access.
+              Explain effective Git access between a user and a repository.
             </p>
           )}
         </div>
@@ -128,23 +223,17 @@ export function AccessTracePanel(): JSX.Element {
             }}
             type="button"
           >
-            <X className="h-4 w-4" aria-hidden />
+            <X aria-hidden className="h-4 w-4" />
           </button>
         ) : null}
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-        {selectedProjectName === null ? (
-          <PlaceholderState
-            detail="Choose a project in the header to enable tracing."
-            message="No project selected"
-          />
-        ) : null}
-
-        {selectedProjectName !== null && !hasPair ? (
-          <PlaceholderState
-            detail="Use the explorer or graph: click a user, then a repo (order does not matter)."
-            message="Select a user and a repository"
+        {!hasPair ? (
+          <GuidedChecklist
+            hasRepo={selectedRepoId !== null}
+            hasUser={selectedUserId !== null}
+            projectSelected={selectedProjectName !== null}
           />
         ) : null}
 
@@ -154,6 +243,11 @@ export function AccessTracePanel(): JSX.Element {
           <div className="p-4">
             <p className="text-sm font-medium text-red-400">Trace failed</p>
             <p className="mt-1 text-xs text-slate-500">{traceQuery.error.message}</p>
+            {traceErrorRequestId !== undefined ? (
+              <p className="mt-2 font-mono text-[10px] text-slate-500">
+                Request ID: {traceErrorRequestId}
+              </p>
+            ) : null}
           </div>
         ) : null}
 
@@ -166,8 +260,8 @@ export function AccessTracePanel(): JSX.Element {
               >
                 <p className="font-medium">No effective access</p>
                 <p className="mt-1 text-amber-200/90">
-                  This user does not have Git access to the selected repository under current
-                  ACLs and group memberships.
+                  This user does not have Git access to the selected repository under current ACLs
+                  and group memberships.
                 </p>
               </div>
             ) : null}
@@ -225,4 +319,41 @@ export function AccessTracePanel(): JSX.Element {
       </div>
     </aside>
   );
+}
+
+function summarizeUser(
+  selectedUserId: string | null,
+  users: UserSummary[] | undefined
+): { title: string; subtitle?: string } | null {
+  if (selectedUserId === null || users === undefined) {
+    return null;
+  }
+  const u = users.find((x) => x.id === selectedUserId);
+  if (u === undefined) {
+    return { title: selectedUserId };
+  }
+  const sub = u.mailAddress ?? u.principalName;
+  return {
+    title: u.displayName,
+    ...(sub !== undefined && sub.length > 0 ? { subtitle: sub } : {}),
+  };
+}
+
+function summarizeRepo(
+  selectedRepoId: string | null,
+  repos: RepoSummary[] | undefined
+): { title: string; branch?: string } | null {
+  if (selectedRepoId === null || repos === undefined) {
+    return null;
+  }
+  const r = repos.find((x) => x.id === selectedRepoId);
+  if (r === undefined) {
+    return { title: selectedRepoId };
+  }
+  return {
+    title: r.name,
+    ...(r.defaultBranch !== undefined && r.defaultBranch.length > 0
+      ? { branch: r.defaultBranch }
+      : {}),
+  };
 }

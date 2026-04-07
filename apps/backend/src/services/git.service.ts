@@ -29,15 +29,17 @@ const log = createLogger("GitService");
 export class GitService {
   constructor(
     private readonly org: string,
+    private readonly cacheNs: string,
     private readonly client: AzureDevOpsClient,
-    private readonly reposByProjectCache: Cache<readonly AzdoRepository[]>
+    private readonly reposByProjectCache: Cache<readonly AzdoRepository[]>,
+    private readonly repoByIdCache: Cache<AzdoRepository>
   ) {}
 
   /**
    * Lists git repositories in the given project (URL-encoded project name or id).
    */
   async listRepositories(project: string): Promise<readonly AzdoRepository[]> {
-    const cacheKey = `${this.org}:git:repos:${encodeURIComponent(project)}`;
+    const cacheKey = `${this.cacheNs}:git:repos:${encodeURIComponent(project)}`;
     const hit = this.reposByProjectCache.get(cacheKey);
     if (hit !== null) {
       log.debug("git.list_repos.cache_hit", {
@@ -58,5 +60,27 @@ export class GitService {
     });
     this.reposByProjectCache.set(cacheKey, parsed.value);
     return parsed.value;
+  }
+
+  /**
+   * Fetches a single repository by id (avoids listing all repos for trace validation).
+   */
+  async getRepository(project: string, repositoryId: string): Promise<AzdoRepository> {
+    const cacheKey = `${this.cacheNs}:git:repo:${encodeURIComponent(project)}:${repositoryId}`;
+    const hit = this.repoByIdCache.get(cacheKey);
+    if (hit !== null) {
+      log.debug("git.get_repository.cache_hit", { project, repositoryId });
+      return hit;
+    }
+
+    const base = this.client.getBaseUrl();
+    const projectSeg = encodeURIComponent(project);
+    const repoSeg = encodeURIComponent(repositoryId);
+    const url = `${base}/${projectSeg}/_apis/git/repositories/${repoSeg}`;
+    const data = await this.client.get<unknown>(url, { "api-version": API_VERSION });
+    const parsed = parseEnvelope(AzdoRepositorySchema, data, "getRepository");
+    log.info("git.get_repository.fetched", { project, repositoryId, name: parsed.name });
+    this.repoByIdCache.set(cacheKey, parsed);
+    return parsed;
   }
 }

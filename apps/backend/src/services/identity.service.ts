@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import type { AzureDevOpsClient } from "@/clients/azureDevOps.client";
 import { API_VERSION } from "@/constants/azdo.constants";
@@ -112,7 +113,14 @@ export type IdentityResolutionMaps = {
 /**
  * Resolves descriptor batches via IMS and builds lookup maps for Graph ↔ security correlation.
  */
+function descriptorBatchKey(descriptors: readonly string[]): string {
+  const unique = [...new Set(descriptors)].sort();
+  return createHash("sha256").update(unique.join("\0"), "utf8").digest("hex");
+}
+
 export class IdentityService {
+  private readonly mapsByDescriptorBatch = new Map<string, IdentityResolutionMaps>();
+
   constructor(private readonly client: AzureDevOpsClient) {}
 
   /**
@@ -185,7 +193,17 @@ export class IdentityService {
    * Resolves descriptors then returns maps + index in one step.
    */
   async resolveAndBuildMaps(descriptors: readonly string[]): Promise<IdentityResolutionMaps> {
+    if (descriptors.length === 0) {
+      return this.buildMaps([]);
+    }
+    const batchKey = descriptorBatchKey(descriptors);
+    const hit = this.mapsByDescriptorBatch.get(batchKey);
+    if (hit !== undefined) {
+      return hit;
+    }
     const identities = await this.resolveDescriptors(descriptors);
-    return this.buildMaps(identities);
+    const maps = this.buildMaps(identities);
+    this.mapsByDescriptorBatch.set(batchKey, maps);
+    return maps;
   }
 }

@@ -1,14 +1,16 @@
 import { Router, type Request, type Response } from "express";
-import type { GraphService } from "@/services/graph.service";
+
+import type { IInsightOpsBundle } from "@/composition/createInsightOpsBundle";
 import { asyncHandler } from "@/middleware/asyncHandler";
 
-export function createProjectsRouter(graphService: GraphService): Router {
+export function createProjectsRouter(getBundle: (req: Request) => IInsightOpsBundle): Router {
   const router = Router();
 
   router.get(
     "/",
-    asyncHandler(async (_req: Request, res: Response) => {
-      const projects = await graphService.listProjects();
+    asyncHandler(async (req: Request, res: Response) => {
+      const bundle = getBundle(req);
+      const projects = await bundle.graphService.listProjects();
       res.json({
         projects: projects.map((p) => ({
           id: p.id,

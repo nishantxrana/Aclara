@@ -54,7 +54,8 @@ export const AzdoRepositorySchema = z.object({
   id: z.string(),
   name: z.string(),
   defaultBranch: z.string().optional(),
-  remoteUrl: z.string(),
+  /** Single-repo GET may omit this in some tenants. */
+  remoteUrl: z.string().optional(),
   project: z.object({
     id: z.string(),
     name: z.string(),

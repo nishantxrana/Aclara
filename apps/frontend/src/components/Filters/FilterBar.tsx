@@ -1,4 +1,4 @@
-import { GitBranch, LayoutGrid, ListTree, ShieldAlert } from "lucide-react";
+import { Expand, GitBranch, ListTree, ScanSearch, ShieldAlert } from "lucide-react";
 
 import { useVisualizerStore } from "@/stores/visualizer.store";
 
@@ -7,8 +7,8 @@ export function FilterBar(): JSX.Element {
   const setFilterText = useVisualizerStore((s) => s.setFilterText);
   const showOnlyOverPrivileged = useVisualizerStore((s) => s.showOnlyOverPrivileged);
   const toggleOverPrivileged = useVisualizerStore((s) => s.toggleOverPrivileged);
-  const layoutMode = useVisualizerStore((s) => s.layoutMode);
-  const setLayoutMode = useVisualizerStore((s) => s.setLayoutMode);
+  const graphViewMode = useVisualizerStore((s) => s.graphViewMode);
+  const setGraphViewMode = useVisualizerStore((s) => s.setGraphViewMode);
 
   return (
     <div className="flex flex-wrap items-center gap-3 border-b border-surface-light bg-surface-light/30 px-4 py-2">
@@ -33,31 +33,48 @@ export function FilterBar(): JSX.Element {
       <div className="flex items-center gap-1 rounded-md border border-surface-light p-0.5">
         <button
           className={`flex items-center gap-1.5 rounded px-2 py-1.5 text-xs font-medium ${
-            layoutMode === "hierarchical"
+            graphViewMode === "overview"
               ? "bg-primary/20 text-primary"
               : "text-slate-400 hover:text-slate-200"
           }`}
           onClick={() => {
-            setLayoutMode("hierarchical");
+            setGraphViewMode("overview");
           }}
+          title="Repos and identities with direct Git permission edges"
           type="button"
         >
           <ListTree className="h-3.5 w-3.5" aria-hidden />
-          Hierarchical
+          Overview
         </button>
         <button
           className={`flex items-center gap-1.5 rounded px-2 py-1.5 text-xs font-medium ${
-            layoutMode === "force"
+            graphViewMode === "focus"
               ? "bg-primary/20 text-primary"
               : "text-slate-400 hover:text-slate-200"
           }`}
           onClick={() => {
-            setLayoutMode("force");
+            setGraphViewMode("focus");
           }}
+          title="Narrow to selected user/repo and trace-related nodes when available"
           type="button"
         >
-          <LayoutGrid className="h-3.5 w-3.5" aria-hidden />
-          Grid
+          <ScanSearch className="h-3.5 w-3.5" aria-hidden />
+          Focus
+        </button>
+        <button
+          className={`flex items-center gap-1.5 rounded px-2 py-1.5 text-xs font-medium ${
+            graphViewMode === "full"
+              ? "bg-primary/20 text-primary"
+              : "text-slate-400 hover:text-slate-200"
+          }`}
+          onClick={() => {
+            setGraphViewMode("full");
+          }}
+          title="Full graph including membership edges"
+          type="button"
+        >
+          <Expand className="h-3.5 w-3.5" aria-hidden />
+          Full
         </button>
       </div>
 

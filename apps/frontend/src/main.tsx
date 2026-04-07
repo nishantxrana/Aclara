@@ -4,12 +4,22 @@ import { createRoot } from "react-dom/client";
 
 import { createLogger } from "@/utils/logger";
 
+import { BrowserRouter } from "react-router-dom";
+
 import App from "./App";
 import "./index.css";
 
 const rqLog = createLogger("react-query");
 
 const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      gcTime: 1_800_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
   queryCache: new QueryCache({
     onError: (error, query) => {
       rqLog.error("query.cache_error", {
@@ -30,7 +40,9 @@ if (rootEl === null) {
 createRoot(rootEl).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>
 );

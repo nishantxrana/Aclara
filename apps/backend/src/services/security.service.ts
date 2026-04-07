@@ -240,6 +240,7 @@ export interface DecodedAcePermissions {
 export class SecurityService {
   constructor(
     private readonly org: string,
+    private readonly cacheNs: string,
     private readonly client: AzureDevOpsClient,
     private readonly namespacesCache: Cache<readonly AzdoSecurityNamespace[]>,
     private readonly aclCache: Cache<Readonly<Record<string, AzdoAcl>>>
@@ -249,7 +250,7 @@ export class SecurityService {
    * Lists security namespaces (cached).
    */
   async listNamespaces(): Promise<readonly AzdoSecurityNamespace[]> {
-    const cacheKey = `${this.org}:security:namespaces`;
+    const cacheKey = `${this.cacheNs}:security:namespaces`;
     const hit = this.namespacesCache.get(cacheKey);
     if (hit !== null) {
       log.debug("security.list_namespaces.cache_hit", { count: hit.length });
@@ -302,7 +303,7 @@ export class SecurityService {
     recurse: boolean;
   }): Promise<Readonly<Record<string, AzdoAcl>>> {
     const { namespaceId, token, recurse } = params;
-    const cacheKey = `${this.org}:acl:${namespaceId}:${token}:${recurse ? "1" : "0"}`;
+    const cacheKey = `${this.cacheNs}:acl:${namespaceId}:${token}:${recurse ? "1" : "0"}`;
     const hit = this.aclCache.get(cacheKey);
     if (hit !== null) {
       log.debug("security.acl.cache_hit", {

@@ -12,6 +12,7 @@ import type {
 
 /** Centralized React Query keys for InsightOps API resources. */
 export const QUERY_KEYS = {
+  sessionStatus: ["insightops", "session", "status"] as const,
   projects: ["insightops", "projects"] as const,
   users: (projectName: string) => ["insightops", "users", projectName] as const,
   repos: (projectName: string) => ["insightops", "repos", projectName] as const,
@@ -19,6 +20,17 @@ export const QUERY_KEYS = {
   trace: (projectName: string, userId: string, repoId: string) =>
     ["insightops", "trace", projectName, userId, repoId] as const,
 } as const;
+
+const SessionStatusSchema = z.discriminatedUnion("connected", [
+  z.object({
+    connected: z.literal(true),
+    org: z.string(),
+    source: z.enum(["session", "env"]),
+  }),
+  z.object({
+    connected: z.literal(false),
+  }),
+]);
 
 const ProjectDtoSchema = z.object({
   id: z.string(),
@@ -162,22 +174,36 @@ function errorMessageFromBody(json: unknown, fallback: string): string {
  * Thrown when the InsightOps API returns a non-2xx response.
  */
 export class ApiHttpError extends Error {
-  constructor(
-    message: string,
-    public readonly status: number,
-    public readonly body: unknown
-  ) {
+  public readonly requestId: string | undefined;
+
+  constructor(message: string, public readonly status: number, public readonly body: unknown) {
     super(message);
     this.name = "ApiHttpError";
+    let requestId: string | undefined;
+    if (typeof body === "object" && body !== null) {
+      const rid = (body as Record<string, unknown>)["requestId"];
+      if (typeof rid === "string" && rid.length > 0) {
+        requestId = rid;
+      }
+    }
+    this.requestId = requestId;
   }
 }
 
 /**
  * Performs a same-origin fetch to `/api/*` (proxied to the backend in dev) and parses JSON with Zod.
+ * Pass `init` for POST/JSON bodies; session cookies are always included.
  */
-export async function apiFetch<T>(path: string, schema: z.ZodType<T>): Promise<T> {
-  apiLog.debug("api.fetch.start", { path });
-  const res = await fetch(path);
+export async function apiFetch<T>(
+  path: string,
+  schema: z.ZodType<T>,
+  init?: RequestInit
+): Promise<T> {
+  apiLog.debug("api.fetch.start", { path, method: init?.method ?? "GET" });
+  const res = await fetch(path, {
+    ...init,
+    credentials: "include",
+  });
   let json: unknown;
   try {
     json = await res.json();
@@ -207,8 +233,11 @@ export async function apiFetch<T>(path: string, schema: z.ZodType<T>): Promise<T
   return parsed.data;
 }
 
-function projectQuery(projectName: string): string {
+function projectQuery(projectName: string, nocache?: boolean): string {
   const q = new URLSearchParams({ project: projectName });
+  if (nocache === true) {
+    q.set("nocache", "1");
+  }
   return q.toString();
 }
 
@@ -232,9 +261,12 @@ export async function fetchProjects(): Promise<ProjectSummary[]> {
 /**
  * Fetches users visible in the project graph scope.
  */
-export async function fetchUsers(projectName: string): Promise<UserSummary[]> {
+export async function fetchUsers(
+  projectName: string,
+  options?: { nocache?: boolean }
+): Promise<UserSummary[]> {
   const data = await apiFetch(
-    `/api/users?${projectQuery(projectName)}`,
+    `/api/users?${projectQuery(projectName, options?.nocache)}`,
     UsersEnvelopeSchema
   );
   return data.users;
@@ -243,9 +275,12 @@ export async function fetchUsers(projectName: string): Promise<UserSummary[]> {
 /**
  * Fetches Git repositories for a project.
  */
-export async function fetchRepos(projectName: string): Promise<RepoSummary[]> {
+export async function fetchRepos(
+  projectName: string,
+  options?: { nocache?: boolean }
+): Promise<RepoSummary[]> {
   const data = await apiFetch(
-    `/api/repos?${projectQuery(projectName)}`,
+    `/api/repos?${projectQuery(projectName, options?.nocache)}`,
     ReposEnvelopeSchema
   );
   return data.repos;
@@ -254,9 +289,12 @@ export async function fetchRepos(projectName: string): Promise<RepoSummary[]> {
 /**
  * Fetches the access graph for a project.
  */
-export async function fetchGraph(projectName: string): Promise<AccessGraph> {
+export async function fetchGraph(
+  projectName: string,
+  options?: { nocache?: boolean }
+): Promise<AccessGraph> {
   const parsed = await apiFetch(
-    `/api/graph?${projectQuery(projectName)}`,
+    `/api/graph?${projectQuery(projectName, options?.nocache)}`,
     AccessGraphSchema
   );
   return {
@@ -284,6 +322,81 @@ export async function fetchTrace(
 }
 
 /**
+ * Forces a fresh project snapshot on the server and returns updated graph + lists.
+ */
+export async function refreshProjectData(projectName: string): Promise<{
+  graph: AccessGraph;
+  users: UserSummary[];
+  repos: RepoSummary[];
+}> {
+  const graph = await fetchGraph(projectName, { nocache: true });
+  const [users, repos] = await Promise.all([
+    fetchUsers(projectName, { nocache: true }),
+    fetchRepos(projectName, { nocache: true }),
+  ]);
+  return { graph, users, repos };
+}
+
+export type SessionStatus = z.infer<typeof SessionStatusSchema>;
+
+/**
+ * Current Azure DevOps connection (session cookie or server env fallback).
+ */
+export async function fetchSessionStatus(): Promise<SessionStatus> {
+  return apiFetch("/api/session/status", SessionStatusSchema);
+}
+
+const ConnectOkSchema = z.object({
+  ok: z.literal(true),
+  org: z.string(),
+});
+
+/**
+ * Validates credentials server-side and opens an HttpOnly session.
+ */
+export async function connectSession(params: {
+  org: string;
+  pat: string;
+}): Promise<void> {
+  await apiFetch("/api/session/connect", ConnectOkSchema, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ org: params.org, pat: params.pat }),
+  });
+}
+
+/**
+ * Clears server session and cookie.
+ */
+export async function disconnectSession(): Promise<void> {
+  const res = await fetch("/api/session", {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!res.ok && res.status !== 204) {
+    let json: unknown;
+    try {
+      json = await res.json();
+    } catch {
+      json = null;
+    }
+    const msg = errorMessageFromBody(json, res.statusText);
+    throw new ApiHttpError(msg ?? "Disconnect failed", res.status, json);
+  }
+}
+
+/**
+ * React Query hook for session / env connection state.
+ */
+export function useSessionStatus(): UseQueryResult<SessionStatus, Error> {
+  return useQuery({
+    queryKey: QUERY_KEYS.sessionStatus,
+    queryFn: fetchSessionStatus,
+    staleTime: 30_000,
+  });
+}
+
+/**
  * React Query hook for the project list (org scope).
  */
 export function useProjects(): UseQueryResult<ProjectSummary[], Error> {
@@ -307,7 +420,7 @@ export function useUsers(projectName: string | null): UseQueryResult<UserSummary
       return fetchUsers(projectName);
     },
     enabled: projectName !== null,
-    staleTime: 30_000,
+    staleTime: 120_000,
   });
 }
 
@@ -324,7 +437,7 @@ export function useRepos(projectName: string | null): UseQueryResult<RepoSummary
       return fetchRepos(projectName);
     },
     enabled: projectName !== null,
-    staleTime: 30_000,
+    staleTime: 120_000,
   });
 }
 
@@ -341,7 +454,7 @@ export function useGraph(projectName: string | null): UseQueryResult<AccessGraph
       return fetchGraph(projectName);
     },
     enabled: projectName !== null,
-    staleTime: 15_000,
+    staleTime: 120_000,
   });
 }
 
@@ -366,6 +479,6 @@ export function useTrace(
       return fetchTrace(projectName, userId, repoId);
     },
     enabled,
-    staleTime: 10_000,
+    staleTime: 60_000,
   });
 }
