@@ -16,6 +16,7 @@ import { useShallow } from "zustand/react/shallow";
 
 import { useGraph } from "@/api/insightops.api";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { createLogger } from "@/utils/logger";
 import type { AccessGraph, NodeType } from "@/types/graph.types";
 import { useVisualizerStore } from "@/stores/visualizer.store";
 import { layoutForcePlaceholder, layoutWithDagreLR } from "@/utils/dagreLayout";
@@ -35,6 +36,8 @@ const nodeTypes: NodeTypes = {
 const edgeTypes: EdgeTypes = {
   permission: PermissionEdge,
 };
+
+const canvasLog = createLogger("GraphCanvas");
 
 function graphMatchesFilter(
   graph: AccessGraph,
@@ -163,6 +166,17 @@ function GraphCanvasInner(): JSX.Element {
       showOnlyOverPrivileged
     );
 
+    canvasLog.debug("graph.canvas.filtered", {
+      projectName: graphQuery.data.projectName,
+      rawNodeCount: graphQuery.data.nodes.length,
+      rawEdgeCount: graphQuery.data.edges.length,
+      filteredNodeCount: baseNodes.length,
+      filteredEdgeCount: baseEdges.length,
+      layoutMode,
+      filterActive: filterLower.length > 0,
+      overPrivilegedOnly: showOnlyOverPrivileged,
+    });
+
     const positioned =
       layoutMode === "hierarchical"
         ? layoutWithDagreLR(baseNodes, baseEdges)
@@ -180,6 +194,10 @@ function GraphCanvasInner(): JSX.Element {
       )
     );
     setEdges(baseEdges);
+    canvasLog.debug("graph.canvas.layout_applied", {
+      positionedNodeCount: positioned.length,
+      edgeCount: baseEdges.length,
+    });
   }, [
     graphQuery.data,
     filterLower,

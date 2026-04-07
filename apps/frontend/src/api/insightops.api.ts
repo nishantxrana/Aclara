@@ -1,6 +1,8 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { z } from "zod";
 
+import { createLogger } from "@/utils/logger";
+
 import type {
   AccessGraph,
   AccessTrace,
@@ -141,6 +143,21 @@ export type InsightOpsApiErrorBody = {
   error?: string;
 };
 
+const apiLog = createLogger("insightops.api");
+
+function errorMessageFromBody(json: unknown, fallback: string): string {
+  if (typeof json === "object" && json !== null) {
+    const o = json as InsightOpsApiErrorBody;
+    if (typeof o.message === "string" && o.message.length > 0) {
+      return o.message;
+    }
+    if (typeof o.error === "string" && o.error.length > 0) {
+      return o.error;
+    }
+  }
+  return fallback;
+}
+
 /**
  * Thrown when the InsightOps API returns a non-2xx response.
  */
@@ -159,6 +176,7 @@ export class ApiHttpError extends Error {
  * Performs a same-origin fetch to `/api/*` (proxied to the backend in dev) and parses JSON with Zod.
  */
 export async function apiFetch<T>(path: string, schema: z.ZodType<T>): Promise<T> {
+  apiLog.debug("api.fetch.start", { path });
   const res = await fetch(path);
   let json: unknown;
   try {
@@ -168,20 +186,24 @@ export async function apiFetch<T>(path: string, schema: z.ZodType<T>): Promise<T
   }
 
   if (!res.ok) {
-    const msg =
-      typeof json === "object" &&
-      json !== null &&
-      "message" in json &&
-      typeof (json as InsightOpsApiErrorBody).message === "string"
-        ? (json as InsightOpsApiErrorBody).message
-        : res.statusText;
+    const msg = errorMessageFromBody(json, res.statusText);
+    apiLog.warn("api.fetch.http_error", {
+      path,
+      status: res.status,
+      message: msg,
+    });
     throw new ApiHttpError(msg ?? "Request failed", res.status, json);
   }
 
   const parsed = schema.safeParse(json);
   if (!parsed.success) {
+    apiLog.error("api.fetch.validation_failed", {
+      path,
+      zodMessage: parsed.error.message,
+    });
     throw new Error(`Invalid API response for ${path}: ${parsed.error.message}`);
   }
+  apiLog.debug("api.fetch.success", { path, status: res.status });
   return parsed.data;
 }
 

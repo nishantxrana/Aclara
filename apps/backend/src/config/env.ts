@@ -12,22 +12,53 @@ function numberWithDefault(defaultValue: number) {
   }, z.coerce.number().finite());
 }
 
-const envSchema = z.object({
-  AZURE_DEVOPS_ORG: z.string().min(1, "AZURE_DEVOPS_ORG is required"),
-  AZURE_DEVOPS_PAT: z.string().min(1, "AZURE_DEVOPS_PAT is required"),
-  PORT: numberWithDefault(3001),
-  NODE_ENV: z.preprocess(
-    (v: unknown) => (v === undefined || v === "" ? "development" : v),
-    z.enum(["development", "production", "test"])
-  ),
-  CORS_ORIGIN: z.preprocess(
-    (v: unknown) => (v === undefined || v === "" ? "http://localhost:5173" : v),
-    z.string()
-  ),
-  CACHE_TTL_GROUPS: numberWithDefault(300),
-  CACHE_TTL_USERS: numberWithDefault(300),
-  CACHE_TTL_ACLS: numberWithDefault(120),
-});
+const LogLevelSchema = z.enum(["TRACE", "DEBUG", "INFO", "WARN", "ERROR"]);
+const LogFormatSchema = z.enum(["json", "pretty"]);
+
+const envSchema = z
+  .object({
+    AZURE_DEVOPS_ORG: z.string().min(1, "AZURE_DEVOPS_ORG is required"),
+    AZURE_DEVOPS_PAT: z.string().min(1, "AZURE_DEVOPS_PAT is required"),
+    PORT: numberWithDefault(3001),
+    NODE_ENV: z.preprocess(
+      (v: unknown) => (v === undefined || v === "" ? "development" : v),
+      z.enum(["development", "production", "test"])
+    ),
+    CORS_ORIGIN: z.preprocess(
+      (v: unknown) => (v === undefined || v === "" ? "http://localhost:5173" : v),
+      z.string()
+    ),
+    CACHE_TTL_GROUPS: numberWithDefault(300),
+    CACHE_TTL_USERS: numberWithDefault(300),
+    CACHE_TTL_ACLS: numberWithDefault(120),
+    LOG_LEVEL: z
+      .preprocess(
+        (v: unknown) =>
+          v === undefined || v === "" ? undefined : String(v).trim().toUpperCase(),
+        LogLevelSchema.optional()
+      )
+      .optional(),
+    LOG_FORMAT: z
+      .preprocess(
+        (v: unknown) =>
+          v === undefined || v === "" ? undefined : String(v).trim().toLowerCase(),
+        LogFormatSchema.optional()
+      )
+      .optional(),
+  })
+  .transform((data) => {
+    const logLevel =
+      data.LOG_LEVEL ??
+      (data.NODE_ENV === "production" ? ("INFO" as const) : ("DEBUG" as const));
+    const logFormat =
+      data.LOG_FORMAT ??
+      (data.NODE_ENV === "production" ? ("json" as const) : ("pretty" as const));
+    return {
+      ...data,
+      LOG_LEVEL: logLevel,
+      LOG_FORMAT: logFormat,
+    };
+  });
 
 function collectMissingRequiredEnv(): string[] {
   const missing: string[] = [];

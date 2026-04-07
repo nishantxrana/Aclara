@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import type { AzureDevOpsClient } from "@/clients/azureDevOps.client";
 import { API_VERSION, GRAPH_API_VERSION } from "@/constants/azdo.constants";
+import { createLogger } from "@/lib/logger";
 import type { Cache } from "@/middleware/cache";
 import {
   type AzdoGroup,
@@ -32,6 +33,8 @@ function parseEach<T>(items: unknown[], itemSchema: z.ZodType<T>, context: strin
   return out;
 }
 
+const log = createLogger("GraphService");
+
 function membershipMapCacheKey(org: string, subjects: readonly string[]): string {
   const payload = [...subjects].sort().join("\0");
   const hash = createHash("sha256").update(payload).digest("hex");
@@ -58,6 +61,7 @@ export class GraphService {
     const cacheKey = `${this.org}:projects`;
     const hit = this.projectsCache.get(cacheKey);
     if (hit !== null) {
+      log.debug("graph.list_projects.cache_hit", { count: hit.length });
       return hit;
     }
 
@@ -67,6 +71,7 @@ export class GraphService {
       "api-version": API_VERSION,
     });
     const projects = parseEach(rawPages, AzdoProjectSchema, "listProjects");
+    log.info("graph.list_projects.fetched", { count: projects.length });
     this.projectsCache.set(cacheKey, projects);
     return projects;
   }
@@ -78,6 +83,7 @@ export class GraphService {
     const cacheKey = `${this.org}:graph:groups`;
     const hit = this.groupsCache.get(cacheKey);
     if (hit !== null) {
+      log.debug("graph.list_groups.cache_hit", { count: hit.length });
       return hit;
     }
 
@@ -87,6 +93,7 @@ export class GraphService {
       "api-version": GRAPH_API_VERSION,
     });
     const groups = parseEach(rawPages, AzdoGroupSchema, "listAllGroups");
+    log.info("graph.list_groups.fetched", { count: groups.length });
     this.groupsCache.set(cacheKey, groups);
     return groups;
   }
@@ -98,6 +105,7 @@ export class GraphService {
     const cacheKey = `${this.org}:graph:users`;
     const hit = this.usersCache.get(cacheKey);
     if (hit !== null) {
+      log.debug("graph.list_users.cache_hit", { count: hit.length });
       return hit;
     }
 
@@ -107,6 +115,7 @@ export class GraphService {
       "api-version": GRAPH_API_VERSION,
     });
     const users = parseEach(rawPages, AzdoUserSchema, "listAllUsers");
+    log.info("graph.list_users.fetched", { count: users.length });
     this.usersCache.set(cacheKey, users);
     return users;
   }
@@ -135,6 +144,9 @@ export class GraphService {
     const cacheKey = membershipMapCacheKey(this.org, subjectDescriptors);
     const hit = this.membershipMapCache.get(cacheKey);
     if (hit !== null) {
+      log.debug("graph.membership_map.cache_hit", {
+        subjectCount: subjectDescriptors.length,
+      });
       return hit;
     }
 
@@ -150,6 +162,9 @@ export class GraphService {
       [...map.entries()].map(([k, v]) => [k, Object.freeze([...v])])
     );
     this.membershipMapCache.set(cacheKey, frozen);
+    log.debug("graph.membership_map.built", {
+      subjectCount: subjectDescriptors.length,
+    });
     return frozen;
   }
 

@@ -6,6 +6,7 @@ import {
   GIT_NAMESPACE_ID,
   OVER_PRIVILEGED_BITS,
 } from "@/constants/azdo.constants";
+import { createLogger } from "@/lib/logger";
 import type { Cache } from "@/middleware/cache";
 import {
   type AzdoAce,
@@ -23,6 +24,8 @@ const NamespacesEnvelopeSchema = z.object({
 const AccessControlListsEnvelopeSchema = z.object({
   value: z.record(AzdoAclSchema),
 });
+
+const log = createLogger("SecurityService");
 
 function parseEnvelope<T>(
   schema: z.ZodType<T>,
@@ -91,13 +94,20 @@ export class SecurityService {
     const cacheKey = `${this.org}:security:namespaces`;
     const hit = this.namespacesCache.get(cacheKey);
     if (hit !== null) {
+      log.debug("security.list_namespaces.cache_hit", { count: hit.length });
       return hit;
     }
 
     const base = this.client.getBaseUrl();
-    const url = `${base}/_apis/security/namespaces`;
+    const url = `${base}/_apis/securitynamespaces`;
+    log.debug("security.list_namespaces.request", {
+      path: "/_apis/securitynamespaces",
+    });
     const data = await this.client.get<unknown>(url, { "api-version": API_VERSION });
     const parsed = parseEnvelope(NamespacesEnvelopeSchema, data, "listNamespaces");
+    log.info("security.list_namespaces.success", {
+      namespaceCount: parsed.value.length,
+    });
     this.namespacesCache.set(cacheKey, parsed.value);
     return parsed.value;
   }
@@ -107,7 +117,20 @@ export class SecurityService {
    */
   async getGitNamespace(): Promise<AzdoSecurityNamespace | undefined> {
     const namespaces = await this.listNamespaces();
-    return namespaces.find((n) => n.namespaceId === GIT_NAMESPACE_ID);
+    const gitNs = namespaces.find((n) => n.namespaceId === GIT_NAMESPACE_ID);
+    if (gitNs === undefined) {
+      log.warn("security.git_namespace.missing", {
+        expectedNamespaceId: GIT_NAMESPACE_ID,
+        availableCount: namespaces.length,
+      });
+    } else {
+      log.debug("security.git_namespace.resolved", {
+        namespaceId: gitNs.namespaceId,
+        name: gitNs.name,
+        actionCount: gitNs.actions.length,
+      });
+    }
+    return gitNs;
   }
 
   /**
@@ -122,11 +145,21 @@ export class SecurityService {
     const cacheKey = `${this.org}:acl:${namespaceId}:${token}:${recurse ? "1" : "0"}`;
     const hit = this.aclCache.get(cacheKey);
     if (hit !== null) {
+      log.debug("security.acl.cache_hit", {
+        namespaceId,
+        recurse,
+        aclTokenCount: Object.keys(hit).length,
+      });
       return hit;
     }
 
     const base = this.client.getBaseUrl();
-    const url = `${base}/_apis/security/accesscontrollists/${namespaceId}`;
+    const url = `${base}/_apis/accesscontrollists/${namespaceId}`;
+    log.debug("security.acl.request", {
+      path: `/_apis/accesscontrollists/${namespaceId}`,
+      recurse,
+      tokenLength: token.length,
+    });
     const data = await this.client.get<unknown>(url, {
       "api-version": API_VERSION,
       tokens: token,
@@ -134,6 +167,16 @@ export class SecurityService {
       includeExtendedInfo: "true",
     });
     const parsed = parseEnvelope(AccessControlListsEnvelopeSchema, data, "getAccessControlLists");
+    const aclKeys = Object.keys(parsed.value);
+    log.info("security.acl.success", {
+      namespaceId,
+      recurse,
+      aclTokenCount: aclKeys.length,
+      totalAceDescriptors: aclKeys.reduce(
+        (acc, k) => acc + Object.keys(parsed.value[k]?.acesDictionary ?? {}).length,
+        0
+      ),
+    });
     this.aclCache.set(cacheKey, parsed.value);
     return parsed.value;
   }

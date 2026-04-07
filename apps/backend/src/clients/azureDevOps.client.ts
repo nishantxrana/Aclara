@@ -3,7 +3,7 @@ import axios, {
   type AxiosResponse,
   type InternalAxiosRequestConfig,
 } from "axios";
-import { config as appConfig } from "@/config/env";
+import { createLogger } from "@/lib/logger";
 
 type RetryableConfig = InternalAxiosRequestConfig & { __retryCount?: number };
 
@@ -15,6 +15,15 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+}
+
+const log = createLogger("AzureDevOpsClient");
+
+function resolveRequestUrl(c: InternalAxiosRequestConfig): string {
+  const base =
+    c.baseURL !== undefined && c.baseURL !== "" ? c.baseURL : "";
+  const path = c.url ?? "";
+  return base !== "" ? `${base}${path}` : path;
 }
 
 function parseRetryAfterMs(headers: Record<string, unknown> | undefined): number | null {
@@ -63,13 +72,18 @@ export class AzureDevOpsClient {
 
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => {
-        if (appConfig.NODE_ENV === "development") {
-          const url =
-            response.config.baseURL !== undefined && response.config.baseURL !== ""
-              ? `${response.config.baseURL}${response.config.url ?? ""}`
-              : response.config.url ?? "";
-          console.log(`[AzureDevOpsClient] ${String(response.status)} ${url}`);
-        }
+        const url = resolveRequestUrl(response.config);
+        const started = (response.config as InternalAxiosRequestConfig & {
+          __startedAt?: number;
+        }).__startedAt;
+        const durationMs =
+          started !== undefined ? Date.now() - started : undefined;
+        log.debug("azdo.http.success", {
+          method: response.config.method?.toUpperCase() ?? "GET",
+          status: response.status,
+          url,
+          durationMs,
+        });
         return response;
       },
       async (error: unknown) => {
@@ -90,23 +104,36 @@ export class AzureDevOpsClient {
           );
           const backoffMs = [1000, 2000, 4000][retryCount] ?? 4000;
           const waitMs = fromHeader ?? backoffMs;
+          log.warn("azdo.http.retry_429", {
+            attempt: retryCount + 1,
+            maxRetries,
+            waitMs,
+            url: resolveRequestUrl(cfg),
+          });
           await sleep(waitMs);
           return this.axiosInstance.request(cfg);
         }
 
-        if (appConfig.NODE_ENV === "development" && axiosError.config !== undefined) {
-          const c = axiosError.config;
-          const url =
-            c.baseURL !== undefined && c.baseURL !== ""
-              ? `${c.baseURL}${c.url ?? ""}`
-              : c.url ?? "";
-          const st = axiosError.response?.status ?? "ERR";
-          console.log(`[AzureDevOpsClient] ${String(st)} ${url}`);
+        if (axiosError.config !== undefined) {
+          const url = resolveRequestUrl(axiosError.config);
+          const st = axiosError.response?.status;
+          log.error("azdo.http.failure", {
+            method: axiosError.config.method?.toUpperCase() ?? "GET",
+            status: st ?? "ERR",
+            url,
+            message: axiosError.message,
+          });
         }
 
         throw axiosError;
       }
     );
+
+    this.axiosInstance.interceptors.request.use((cfg) => {
+      const c = cfg as InternalAxiosRequestConfig & { __startedAt?: number };
+      c.__startedAt = Date.now();
+      return c;
+    });
   }
 
   getBaseUrl(): string {

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { AzureDevOpsClient } from "@/clients/azureDevOps.client";
 import { API_VERSION } from "@/constants/azdo.constants";
+import { createLogger } from "@/lib/logger";
 import type { Cache } from "@/middleware/cache";
 import { type AzdoRepository, AzdoRepositorySchema } from "@/types/azdo.types";
 
@@ -20,6 +21,8 @@ function parseEnvelope<T>(
   return parsed.data;
 }
 
+const log = createLogger("GitService");
+
 /**
  * Git repositories for a project (cached via injected cache; TTL set at construction).
  */
@@ -37,6 +40,10 @@ export class GitService {
     const cacheKey = `${this.org}:git:repos:${encodeURIComponent(project)}`;
     const hit = this.reposByProjectCache.get(cacheKey);
     if (hit !== null) {
+      log.debug("git.list_repos.cache_hit", {
+        project,
+        count: hit.length,
+      });
       return hit;
     }
 
@@ -45,6 +52,10 @@ export class GitService {
     const url = `${base}/${segment}/_apis/git/repositories`;
     const data = await this.client.get<unknown>(url, { "api-version": API_VERSION });
     const parsed = parseEnvelope(RepositoriesEnvelopeSchema, data, "listRepositories");
+    log.info("git.list_repos.fetched", {
+      project,
+      count: parsed.value.length,
+    });
     this.reposByProjectCache.set(cacheKey, parsed.value);
     return parsed.value;
   }

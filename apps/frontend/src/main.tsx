@@ -1,10 +1,24 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+
+import { createLogger } from "@/utils/logger";
+
 import App from "./App";
 import "./index.css";
 
-const queryClient = new QueryClient();
+const rqLog = createLogger("react-query");
+
+const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error, query) => {
+      rqLog.error("query.cache_error", {
+        queryKey: query.queryKey,
+        message: error instanceof Error ? error.message : String(error),
+      });
+    },
+  }),
+});
 
 document.documentElement.classList.add("dark");
 

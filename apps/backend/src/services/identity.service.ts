@@ -1,12 +1,15 @@
 import { z } from "zod";
 import type { AzureDevOpsClient } from "@/clients/azureDevOps.client";
 import { API_VERSION } from "@/constants/azdo.constants";
+import { createLogger } from "@/lib/logger";
 import {
   type AzdoIdentity,
   AzdoIdentitiesResponseSchema,
 } from "@/types/azdo.types";
 
 const BATCH_SIZE = 50;
+
+const log = createLogger("IdentityService");
 
 function parseEnvelope<T>(
   schema: z.ZodType<T>,
@@ -50,6 +53,11 @@ export class IdentityService {
     const results: AzdoIdentity[] = [];
 
     const urlWithVersion = `${url}?api-version=${API_VERSION}`;
+    const batchCount = Math.ceil(unique.length / BATCH_SIZE) || 0;
+    log.debug("identity.resolve_descriptors.start", {
+      uniqueDescriptorCount: unique.length,
+      batchCount,
+    });
 
     for (let i = 0; i < unique.length; i += BATCH_SIZE) {
       const batch = unique.slice(i, i + BATCH_SIZE);
@@ -60,6 +68,10 @@ export class IdentityService {
       results.push(...parsed.value);
     }
 
+    log.info("identity.resolve_descriptors.complete", {
+      uniqueDescriptorCount: unique.length,
+      identityCount: results.length,
+    });
     return results;
   }
 

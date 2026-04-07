@@ -3,8 +3,10 @@ import cors from "cors";
 import helmet from "helmet";
 import { AzureDevOpsClient } from "@/clients/azureDevOps.client";
 import { config } from "@/config/env";
+import { createLogger } from "@/lib/logger";
 import { createCache } from "@/middleware/cache";
 import { errorHandler } from "@/middleware/errorHandler";
+import { requestContextMiddleware } from "@/middleware/requestContext";
 import { createGraphRouter } from "@/routes/graph.routes";
 import { createProjectsRouter } from "@/routes/projects.routes";
 import { createReposRouter } from "@/routes/repos.routes";
@@ -25,10 +27,12 @@ import type {
 } from "@/types/azdo.types";
 
 const app = express();
+const rootLog = createLogger("server");
 
 app.use(cors({ origin: config.CORS_ORIGIN }));
 app.use(helmet());
 app.use(express.json());
+app.use(requestContextMiddleware);
 
 const client = new AzureDevOpsClient({
   org: config.AZURE_DEVOPS_ORG,
@@ -99,7 +103,10 @@ app.use("/api/trace", createTraceRouter(graphBuilderService));
 app.use(errorHandler);
 
 app.listen(config.PORT, () => {
-  console.log(
-    `InsightOps backend listening on http://localhost:${String(config.PORT)}`
-  );
+  rootLog.info("server.listening", {
+    port: config.PORT,
+    nodeEnv: config.NODE_ENV,
+    logLevel: config.LOG_LEVEL,
+    logFormat: config.LOG_FORMAT,
+  });
 });

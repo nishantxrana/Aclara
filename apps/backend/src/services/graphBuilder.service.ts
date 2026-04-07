@@ -1,5 +1,6 @@
 import { ACL_TOKEN, GIT_PERMISSIONS } from "@/constants/azdo.constants";
 import { HttpError } from "@/errors/httpError";
+import { createLogger } from "@/lib/logger";
 import type { DecodedAcePermissions } from "@/services/security.service";
 import type { GraphService } from "@/services/graph.service";
 import type { GitService } from "@/services/git.service";
@@ -14,6 +15,8 @@ import type {
   TraceStep,
 } from "@/types/graph.types";
 import type { AzdoProject, AzdoRepository } from "@/types/azdo.types";
+
+const log = createLogger("GraphBuilder");
 
 function repoNodeId(repoId: string): string {
   return `repo:${repoId}`;
@@ -124,18 +127,32 @@ export class GraphBuilderService {
    * Builds a project-scoped access graph: repos, identities from ACLs, membership, and permission edges.
    */
   async buildAccessGraph(projectName: string): Promise<AccessGraph> {
+    log.info("graph.build.start", { projectName });
     const project = await this.resolveProjectByName(projectName);
+    log.debug("graph.build.project_resolved", {
+      projectId: project.id,
+      projectName: project.name,
+    });
     const gitNs = await this.securityService.getGitNamespace();
     if (gitNs === undefined) {
       throw new HttpError("Git security namespace is not available", 500);
     }
 
+    log.debug("graph.build.fetch_parallel.start", {
+      projectId: project.id,
+    });
     const [repos, groups, users, aclRecord] = await Promise.all([
       this.gitService.listRepositories(project.name),
       this.graphService.listAllGroups(),
       this.graphService.listAllUsers(),
       this.securityService.getProjectGitAcls(project.id),
     ]);
+    log.debug("graph.build.fetch_parallel.done", {
+      repoCount: repos.length,
+      groupCount: groups.length,
+      userCount: users.length,
+      aclRootTokenCount: Object.keys(aclRecord).length,
+    });
 
     const groupSubjects = new Set(groups.map((g) => g.subjectDescriptor));
     const userSubjects = new Set(users.map((u) => u.subjectDescriptor));
@@ -147,6 +164,9 @@ export class GraphBuilderService {
       }
     }
 
+    log.debug("graph.build.identity_descriptors", {
+      uniqueAceDescriptors: aceDescriptors.size,
+    });
     const maps =
       aceDescriptors.size > 0
         ? await this.identityService.resolveAndBuildMaps([...aceDescriptors])
@@ -177,6 +197,7 @@ export class GraphBuilderService {
     const repoById = new Map(repos.map((r) => [r.id, r] as const));
 
     const subjectsNeedingMembership = new Set<string>();
+    let skippedAclTokens = 0;
 
     for (const acl of Object.values(aclRecord)) {
       const tokenParts = acl.token.split("/");
@@ -185,6 +206,7 @@ export class GraphBuilderService {
           ? tokenParts[2]
           : undefined;
       if (repoIdFromToken === undefined || !repoById.has(repoIdFromToken)) {
+        skippedAclTokens += 1;
         continue;
       }
 
@@ -223,6 +245,13 @@ export class GraphBuilderService {
         });
       }
     }
+
+    const permissionEdgeCount = edges.length;
+    log.debug("graph.build.acl_to_edges", {
+      skippedAclTokensNotMappedToRepoInProject: skippedAclTokens,
+      permissionEdgeCount,
+      nonRepoNodesAfterAces: nodesById.size - repos.length,
+    });
 
     if (subjectsNeedingMembership.size > 0) {
       const membershipMap = await this.graphService.getCachedMembershipMap([
@@ -275,13 +304,19 @@ export class GraphBuilderService {
       }
     }
 
-    return {
+    const out: AccessGraph = {
       nodes: [...nodesById.values()],
       edges,
       projectId: project.id,
       projectName: project.name,
       generatedAt: new Date().toISOString(),
     };
+    log.info("graph.build.complete", {
+      projectName: out.projectName,
+      nodeCount: out.nodes.length,
+      edgeCount: out.edges.length,
+    });
+    return out;
   }
 
   /**
@@ -292,6 +327,7 @@ export class GraphBuilderService {
     userId: string,
     repoId: string
   ): Promise<AccessTrace> {
+    log.info("trace.start", { projectName, userId, repoId });
     const project = await this.resolveProjectByName(projectName);
     await this.resolveRepository(project, repoId);
 
@@ -379,7 +415,7 @@ export class GraphBuilderService {
       (finalBits & GIT_PERMISSIONS.GenericContribute) ===
       GIT_PERMISSIONS.GenericContribute;
 
-    return {
+    const trace: AccessTrace = {
       userId,
       repoId,
       steps,
@@ -387,5 +423,11 @@ export class GraphBuilderService {
       deniedPermissions: deniedNames,
       hasAccess: hasRead || hasContribute || effectiveNames.length > 0,
     };
+    log.info("trace.complete", {
+      projectName,
+      stepCount: trace.steps.length,
+      hasAccess: trace.hasAccess,
+    });
+    return trace;
   }
 }
