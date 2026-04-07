@@ -1,0 +1,53 @@
+---
+description: Backend Express + Node.js architecture rules for apps/backend/**
+globs:
+  - "apps/backend/**/*.ts"
+alwaysApply: false
+---
+
+# Backend Architecture Rules
+
+## AzureDevOpsClient — Single Source of Truth
+- ALL HTTP calls to Azure DevOps go through `AzureDevOpsClient`
+- Never use raw `fetch` or `axios` directly in service files
+- The client handles: auth headers, retries on 429, request logging in dev
+
+## Authentication
+- PAT token auth: `Basic ${Buffer.from(':' + pat).toString('base64')}`
+- Set on every request via Axios default headers — never per-request
+
+## API Base URLs — Three Domains
+- Main: `https://dev.azure.com/{org}`
+- Graph/Identity: `https://vssps.dev.azure.com/{org}`
+- Entitlements: `https://vsaex.dev.azure.com/{org}`
+- Always use API version `7.1` (or `7.1-preview.1` for Graph, `7.1-preview.2` for Entitlements)
+
+## Pagination — Mandatory
+- ALL Graph API calls MUST handle `x-ms-continuationtoken` response header
+- Loop until the header is absent — never assume one page is complete
+- Implement in `AzureDevOpsClient.paginate<T>()` method
+
+## Rate Limiting
+- Add 100ms minimum delay between sequential API calls in service methods
+- Axios interceptor: on 429 response, wait (retry-after header or exponential backoff), retry max 3x
+- Backoff delays: 1000ms, 2000ms, 4000ms
+
+## Caching
+- Every public service method that calls the AzDO API checks cache first
+- Cache key format: `{org}:{project}:{methodName}:{additionalParams}`
+- TTL values come from env config, not hardcoded
+
+## Route Structure
+- All routes mounted under `/api`
+- Route files only contain: validation, call to service, response formatting
+- Business logic lives in service files, never in route handlers
+
+## Error Middleware
+- Single global error handler at end of Express middleware chain
+- Maps AzDO 401/403 → 401, 429 → 429 with Retry-After, Zod errors → 400, else → 500
+- Dev: include stack trace; prod: sanitize
+
+## Project Scoping
+- No `AZURE_DEVOPS_DEFAULT_PROJECT` env var exists
+- The `/api/projects` endpoint returns the full project list for the org
+- All other endpoints require `?project={projectName}` query param (validated, not defaulted)

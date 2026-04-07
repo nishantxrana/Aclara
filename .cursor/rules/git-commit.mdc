@@ -1,0 +1,33 @@
+---
+description: Git commit standards and branch strategy for multi-agent parallel development.
+globs:
+alwaysApply: true
+---
+
+# Git Standards
+
+## Conventional Commits (Mandatory)
+Format: `{type}({scope}): {short description}`
+Types: feat | fix | chore | docs | refactor | test | style
+Scopes: backend | frontend | config | deps | graph | api | auth
+
+Examples:
+  feat(backend): add ACL pagination to security service
+  fix(frontend): correct dagre layout direction for group nodes
+  chore(deps): add @xyflow/react and @dagrejs/dagre
+  refactor(backend): extract identity resolution into dedicated service
+
+## Branch Strategy (for parallel agent work)
+- `main` — always deployable
+- `feat/agent-{n}-{feature}` — per-agent feature branch
+  - `feat/agent-1-backend-foundation`
+  - `feat/agent-2-graph-builder`
+  - `feat/agent-3-frontend-canvas`
+  - `feat/agent-4-access-trace`
+- Merge to main only after agent task is verified
+
+## Never Commit
+- `.env` files with real credentials
+- `node_modules/` or `bun.lockb` conflicts
+- Console.log statements left in production code
+- TypeScript errors (`tsc --noEmit` must pass before commit)

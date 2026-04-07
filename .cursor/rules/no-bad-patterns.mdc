@@ -1,0 +1,30 @@
+---
+description: Anti-patterns that are banned in this project. Always enforced.
+globs:
+alwaysApply: true
+---
+
+# Banned Patterns — Never Do These
+
+## Never
+- `process.env.ANYTHING` outside of `apps/backend/src/config/env.ts`
+- Raw `fetch()` or `axios` calls outside of `AzureDevOpsClient`
+- Hardcoded Azure DevOps org name, namespace IDs, or permission bitmask numbers inline
+- `any` TypeScript type — use `unknown` + Zod
+- `.cursorrules` file (deprecated) — use `.cursor/rules/*.mdc` only
+- `npm install` or `yarn add` — always `bun add`
+- Hardcoded default project name — project is always selected by the user at runtime
+- Inline `nodeTypes` or `edgeTypes` objects inside a React component render — causes react-flow to remount nodes on every render
+- `localStorage` or `sessionStorage` — not needed, state lives in Zustand + React Query
+- Nested ternaries in JSX — extract to a variable or early return
+- Catching errors and returning `null` silently — always propagate or log with context
+
+## Environment & Config
+- There is NO `AZURE_DEVOPS_DEFAULT_PROJECT` environment variable in this project
+- Project selection is a runtime user action, not a config value
+- All optional config has sensible defaults defined in the Zod schema in `env.ts`
+
+## API Design
+- No endpoint returns raw AzDO API response shapes — always transform to internal types
+- Never expose PAT token in any response or log line
+- All endpoints require explicit `?project=` param where applicable — no implicit defaults

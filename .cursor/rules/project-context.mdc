@@ -1,0 +1,46 @@
+---
+description: InsightOps Access Visualizer — project context, stack, and architecture. Always apply this rule.
+globs:
+alwaysApply: true
+---
+
+# InsightOps Access Visualizer — Project Context
+
+## What This Project Does
+InsightOps is a fullstack TypeScript tool that visualizes Azure DevOps access control.
+It fetches identity graphs, permission ACLs, and group memberships via Azure DevOps REST APIs,
+then renders them as an interactive node-graph so users can trace exactly WHY a user
+has (or does not have) access to a repository.
+
+## Monorepo Structure
+insightops-access-visualizer/
+├── apps/
+│   ├── backend/   → Node.js + Express + TypeScript
+│   └── frontend/  → React 18 + TypeScript + Vite
+├── .cursor/rules/
+└── docs/
+
+## Tech Stack — Do Not Deviate
+- Package manager / runtime: Bun (always use `bun add`, never `npm install`)
+- Backend: Node.js, Express, TypeScript (strict), Zod, Axios
+- Frontend: React 18, TypeScript (strict), Vite, Tailwind CSS v3
+- Graph UI: @xyflow/react (react-flow v12)
+- Layout: @dagrejs/dagre
+- State: Zustand v4
+- Data fetching: @tanstack/react-query v5
+- Validation everywhere: Zod v3
+
+## Org-First Data Model
+Azure DevOps PAT tokens are org-scoped. The app ALWAYS:
+1. Fetches the full list of projects for the org first
+2. Lets the user select one or more projects
+3. Scopes all downstream API calls to the selected project(s)
+There is NO hardcoded default project anywhere in the codebase.
+
+## Key Architectural Decisions
+- All Azure DevOps API calls are centralized in `AzureDevOpsClient` class
+- All env vars accessed ONLY via `src/config/env.ts` (Zod-validated)
+- All AzDO API responses parsed with Zod schemas before use
+- In-memory cache wraps every AzDO service call with configurable TTL
+- Identity descriptor resolution is mandatory before correlating Graph ↔ Security ACL data
+- Bitmask decoding: `(bitmask & bit) === bit` — defined in `azdo.constants.ts`

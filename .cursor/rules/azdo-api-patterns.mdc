@@ -1,0 +1,55 @@
+---
+description: Azure DevOps API critical patterns, gotchas, and correct endpoint usage.
+globs:
+alwaysApply: true
+---
+
+# Azure DevOps API — Critical Patterns
+
+## The Descriptor Problem (Most Common Bug)
+Azure DevOps has TWO identity systems that do NOT share descriptors:
+- Graph API uses `subjectDescriptor` (e.g., `aad.xxx`, `vssgp.xxx`)
+- Security ACL API uses old identity `descriptor` (e.g., `Microsoft.TeamFoundation.Identity;S-1-9-...`)
+
+**You MUST resolve between them before correlating users/groups to ACL entries.**
+Use: `POST https://vssps.dev.azure.com/{org}/_apis/identities`
+with body `{ descriptors: ["vssgp.xxx"] }` → returns objects with both descriptor formats.
+Build a bidirectional map at graph-build time. Never assume they match.
+
+## ACL Token Formats
+- Project-level git:  `repoV2/{projectId}`
+- Repository-level:   `repoV2/{projectId}/{repoId}`
+- Fetch with `recurse=true` to get all repo tokens under a project in one call
+
+## Bitmask Permission Logic
+- Allow: `(ace.allow & bit) === bit`
+- Effective: `effectiveAllow = ace.allow & ~ace.deny`
+- Inherited permissions come from `ace.extendedInfo.effectiveAllow` (requires `includeExtendedInfo=true`)
+- Over-privileged check: bits 1 (Administer), 8192 (ManagePermissions), 32768 (PullRequestBypassPolicy)
+
+## Pagination — Never Skip
+- Graph API truncates at 100 without pagination
+- Response header: `x-ms-continuationtoken`
+- Query param for next page: `continuationToken={value}`
+- Loop until header is absent from response
+
+## Three Base Domains
+- Main API:         `https://dev.azure.com/{org}`
+- Graph/Identity:   `https://vssps.dev.azure.com/{org}`
+- Entitlements:     `https://vsaex.dev.azure.com/{org}`
+Getting these wrong returns 404 silently.
+
+## API Versions
+- Standard:    `?api-version=7.1`
+- Graph:       `?api-version=7.1-preview.1` (also needs Accept header with version)
+- Entitlement: `?api-version=7.1-preview.2`
+
+## Group Nesting
+- Groups nest up to 10+ levels deep in large orgs
+- Always use BFS with a `visited` Set to resolve transitive memberships
+- Cap traversal at depth 10 to prevent infinite loops in circular configs
+
+## Rate Limits
+- ~200 requests per 5-second window per PAT token
+- On 429: read `Retry-After` header, wait, retry — do NOT immediately fail
+- For large orgs: batch identity resolution in groups of 50 max

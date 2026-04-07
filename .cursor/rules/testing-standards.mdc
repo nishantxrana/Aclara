@@ -1,0 +1,36 @@
+---
+description: Testing standards for all test files in the project.
+globs:
+  - "**/*.test.ts"
+  - "**/*.spec.ts"
+  - "**/*.test.tsx"
+alwaysApply: false
+---
+
+# Testing Standards
+
+## Framework
+- Use Bun's built-in test runner: `import { test, expect, describe, mock } from 'bun:test'`
+- No Jest, no Vitest — Bun test is the single test runner
+
+## What to Test
+- Backend services: unit test each service method with mocked AzureDevOpsClient
+- Permission decoder: test bitmask logic exhaustively with known values
+- Identity resolver: test descriptor mapping with fixture data
+- Graph builder: integration test with full mocked AzDO responses
+- Frontend: test Zustand store actions and React Query hook behavior
+
+## Mocking AzDO Client
+- Always mock `AzureDevOpsClient` at the module level in service tests
+- Never make real HTTP calls in tests — use fixture JSON files in `tests/fixtures/`
+- Fixture files mirror real AzDO API response shapes exactly
+
+## Coverage Goals (POC)
+- Services: 80% line coverage minimum
+- Utils/constants: 100%
+- Routes: happy path + error cases
+- Frontend components: smoke tests only for POC
+
+## Test File Location
+- Backend: `apps/backend/src/__tests__/{service}.test.ts`
+- Frontend: co-located with component: `GraphCanvas.test.tsx` next to `GraphCanvas.tsx`

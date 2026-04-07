@@ -1,0 +1,51 @@
+---
+description: Frontend React + TypeScript standards for apps/frontend/**
+globs:
+  - "apps/frontend/**/*.tsx"
+  - "apps/frontend/**/*.ts"
+alwaysApply: false
+---
+
+# Frontend Architecture Rules
+
+## Components
+- Functional components ONLY — no class components
+- Every component that receives the same props must produce the same output → use `React.memo`
+- react-flow custom nodes MUST be wrapped in `React.memo` — re-renders kill graph performance
+- Props interfaces defined in the same file, exported with `I` prefix convention: `IUserNodeProps`
+- No logic in JSX — extract to named functions or hooks
+
+## Hooks
+- Complex hook logic (more than 5 lines) extracted to `use{Name}.ts` files
+- Hooks directory: `src/hooks/`
+- Never call React Query hooks inside loops or conditions
+
+## State Management
+- Zustand store for global UI state (selected nodes, filters, layout mode)
+- React Query for all server state (API data, loading, error)
+- Local `useState` for ephemeral component state only (dropdown open/closed)
+- Never mix: don't cache server data in Zustand
+
+## react-flow Rules
+- Import from `@xyflow/react` (v12+), not the old `reactflow`
+- Custom node types registered in `nodeTypes` object OUTSIDE the component render — never inline
+- Custom edge types registered in `edgeTypes` OUTSIDE render
+- Use `useNodesState` / `useEdgesState` for node/edge state
+- dagre layout computed ONCE when graph data changes, not on every render
+
+## Styling
+- Tailwind CSS utility classes only — no inline styles, no CSS modules
+- Dark theme is default: `class="dark"` on `<html>`
+- Custom colors defined in `tailwind.config.ts`, not hardcoded hex values in JSX
+- Responsive not required for POC — optimize for 1280px+ desktop
+
+## API Layer
+- All API calls via React Query hooks in `src/api/insightops.api.ts`
+- Never call `fetch` directly in components
+- Query keys are centralized constants: `QUERY_KEYS.graph(project)`, etc.
+- Show loading skeletons, not spinners, for initial data fetch
+
+## Project-First Flow
+- On app load: fetch project list, show project selector
+- No data fetches run until a project is selected
+- Selected project stored in Zustand, passed as param to all other hooks
