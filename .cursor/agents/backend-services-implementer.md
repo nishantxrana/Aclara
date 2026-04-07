@@ -74,6 +74,15 @@ If `azdo.types.ts` lacks a Zod shape for a response you must parse, you may add 
 1. Run `cd apps/backend && bun run typecheck` and fix all TypeScript errors.
 2. If the workspace is a git repo and the user wants a commit: `feat(backend): implement graph, security, git, identity services` (Conventional Commits).
 
+## Validating this subagent (after you create or change it)
+
+Confirm an invocation against the repo:
+
+1. The implementer reads the five foundation files (`azureDevOps.client.ts`, `env.ts`, `azdo.constants.ts`, `azdo.types.ts`, `cache.ts`) before editing services.
+2. It only creates or changes the four modules under `apps/backend/src/services/` unless the user explicitly expands scope.
+3. It runs `cd apps/backend && bun run typecheck` and resolves all TypeScript errors before finishing.
+4. Commits for this work use `feat(backend): implement graph, security, git, identity services` (Conventional Commits).
+
 ## Risks to remember
 
 - Do not imply per-method TTL changes inside services; TTL is entirely determined by how the app constructs each `Cache` with `createCache(ttlSeconds)` from config.
