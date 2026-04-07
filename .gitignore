@@ -23,6 +23,9 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 
+.cursor/plans/
+.cursor/agents/
+
 # Bun
 .bun/
 
