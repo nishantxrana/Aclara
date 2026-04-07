@@ -99,17 +99,21 @@ export function ProjectPicker(props: ProjectPickerProps): JSX.Element {
     };
   }, [open]);
 
+  const resetSearch = useCallback(() => {
+    setSearch("");
+    setActiveIndex(0);
+    queueMicrotask(() => {
+      inputRef.current?.focus();
+    });
+  }, []);
+
   const selectProject = useCallback(
-    (p: ProjectSummary | null) => {
-      if (p === null) {
-        props.onSelect(null, null);
-      } else {
-        props.onSelect(p.id, p.name);
-      }
+    (p: ProjectSummary) => {
+      props.onSelect(p.id, p.name);
       setOpen(false);
       setSearch("");
     },
-    [props]
+    [props.onSelect]
   );
 
   const onKeyDown = useCallback(
@@ -241,7 +245,7 @@ export function ProjectPicker(props: ProjectPickerProps): JSX.Element {
 
       {open ? (
         <ul
-          className="absolute left-0 right-0 z-50 mt-1 max-h-64 overflow-auto rounded-md border border-surface-light bg-surface py-1 shadow-lg"
+          className="project-picker-scrollbar absolute left-0 right-0 z-50 mt-1 max-h-64 overflow-auto rounded-md border border-surface-light bg-surface py-1 shadow-lg"
           id={listboxId}
           role="listbox"
         >
@@ -286,20 +290,23 @@ export function ProjectPicker(props: ProjectPickerProps): JSX.Element {
               );
             })
           )}
-          <li className="border-t border-surface-light" role="presentation">
-            <button
-              className="w-full px-3 py-2 text-left text-xs text-slate-500 hover:bg-surface-light/40"
-              onMouseDown={(e) => {
-                e.preventDefault();
-              }}
-              onClick={() => {
-                selectProject(null);
-              }}
-              type="button"
-            >
-              Clear selection
-            </button>
-          </li>
+          {normalize(search).length > 0 ? (
+            <li className="border-t border-surface-light" role="presentation">
+              <button
+                aria-label="Clear search"
+                className="w-full px-3 py-2 text-left text-xs text-slate-500 hover:bg-surface-light/40"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                }}
+                onClick={() => {
+                  resetSearch();
+                }}
+                type="button"
+              >
+                Clear search
+              </button>
+            </li>
+          ) : null}
         </ul>
       ) : null}
     </div>

@@ -3,3 +3,29 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Matches theme surface (#1e1e2e) / surface-light (#2a2a3e) — scoped to project picker listbox only */
+@layer utilities {
+  .project-picker-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #3a3a52 #1e1e2e;
+  }
+
+  .project-picker-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .project-picker-scrollbar::-webkit-scrollbar-track {
+    background: #1e1e2e;
+    border-radius: 9999px;
+  }
+
+  .project-picker-scrollbar::-webkit-scrollbar-thumb {
+    background: #3a3a52;
+    border-radius: 9999px;
+  }
+
+  .project-picker-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #2a2a3e;
+  }
+}
