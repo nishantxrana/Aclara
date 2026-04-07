@@ -89,3 +89,21 @@ export const AzdoSecurityNamespaceSchema = z.object({
 });
 
 export type AzdoSecurityNamespace = z.infer<typeof AzdoSecurityNamespaceSchema>;
+
+/** Identity object returned by IMS Read Identities (used to correlate Graph vs security descriptors). */
+export const AzdoIdentitySchema = z.object({
+  descriptor: z.string(),
+  subjectDescriptor: z.string().optional(),
+  principalName: z.string().optional(),
+  displayName: z.string().optional(),
+  mailAddress: z.string().optional(),
+});
+
+export type AzdoIdentity = z.infer<typeof AzdoIdentitySchema>;
+
+export const AzdoIdentitiesResponseSchema = z.object({
+  value: z.array(AzdoIdentitySchema),
+  count: z.number().optional(),
+});
+
+export type AzdoIdentitiesResponse = z.infer<typeof AzdoIdentitiesResponseSchema>;
