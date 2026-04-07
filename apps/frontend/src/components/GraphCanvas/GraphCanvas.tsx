@@ -211,13 +211,15 @@ function GraphCanvasInner(): JSX.Element {
   const onNodeClick = useCallback(
     (_: MouseEvent, node: Node) => {
       if (node.type === "user") {
-        setSelectedUser(node.id);
-        setSelectedRepo(null);
+        const id = node.id;
+        const prev = useVisualizerStore.getState().selectedUserId;
+        setSelectedUser(prev === id ? null : id);
         return;
       }
       if (node.type === "repo") {
-        setSelectedRepo(repoIdFromNodeId(node.id));
-        setSelectedUser(null);
+        const rid = repoIdFromNodeId(node.id);
+        const prevRepo = useVisualizerStore.getState().selectedRepoId;
+        setSelectedRepo(prevRepo === rid ? null : rid);
         return;
       }
       setSelectedUser(null);

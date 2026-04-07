@@ -98,8 +98,7 @@ export function Sidebar(): JSX.Element {
                         : "text-slate-300 hover:bg-surface-light"
                     }`}
                     onClick={() => {
-                      setSelectedUser(u.id);
-                      setSelectedRepo(null);
+                      setSelectedUser(selectedUserId === u.id ? null : u.id);
                     }}
                     type="button"
                   >
@@ -142,8 +141,7 @@ export function Sidebar(): JSX.Element {
                         : "text-slate-300 hover:bg-surface-light"
                     }`}
                     onClick={() => {
-                      setSelectedRepo(r.id);
-                      setSelectedUser(null);
+                      setSelectedRepo(selectedRepoId === r.id ? null : r.id);
                     }}
                     type="button"
                   >

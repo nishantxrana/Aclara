@@ -53,10 +53,9 @@ const storeCreator: StateCreator<VisualizerStore> = (set) => ({
 
   setLayoutMode: (mode) => set({ layoutMode: mode }),
 
+  /** Clears trace targets and hover only; keeps project and filters. */
   clearSelection: () =>
     set({
-      selectedProject: null,
-      selectedProjectName: null,
       selectedUserId: null,
       selectedRepoId: null,
       hoveredNodeId: null,
