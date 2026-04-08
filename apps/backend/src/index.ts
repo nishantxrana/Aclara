@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import express, { type Request, type Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -39,7 +42,14 @@ app.use(
     credentials: true,
   })
 );
-app.use(helmet());
+app.use(
+  config.NODE_ENV === "production"
+    ? helmet({
+        // Vite-built SPA: disable default CSP (hashed asset names vary each build).
+        contentSecurityPolicy: false,
+      })
+    : helmet()
+);
 app.use(express.json());
 app.use(requestContextMiddleware);
 
@@ -159,6 +169,31 @@ app.use(
 app.use("/api/trace", requireAclaraAuth, createTraceRouter(getBundle));
 
 app.use(errorHandler);
+
+app.use((req: Request, res: Response, next: express.NextFunction) => {
+  if (res.headersSent) {
+    next();
+    return;
+  }
+  if (req.path.startsWith("/api")) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  next();
+});
+
+const publicDir = path.join(__dirname, "..", "public");
+const spaIndexHtml = path.join(publicDir, "index.html");
+if (config.NODE_ENV === "production" && fs.existsSync(spaIndexHtml)) {
+  app.use(express.static(publicDir));
+  app.get("*", (req: Request, res: Response, next: express.NextFunction) => {
+    if (req.path.startsWith("/api")) {
+      next();
+      return;
+    }
+    res.sendFile(spaIndexHtml);
+  });
+}
 
 app.listen(config.PORT, () => {
   rootLog.info("server.listening", {

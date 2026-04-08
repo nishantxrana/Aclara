@@ -1,9 +1,13 @@
 {
   "name": "@aclara/backend",
   "version": "0.1.0",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "bun run --watch src/index.ts",
-    "build": "tsc --noEmit",
+    "build": "tsc && tsc-alias",
+    "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "test": "bun test"
   },
@@ -18,7 +22,8 @@
     "dotenv": "^16.6.1"
   },
   "devDependencies": {
-    "typescript": "^5.9.3",
-    "@types/node": "^20.19.39"
+    "@types/node": "^20.19.39",
+    "tsc-alias": "^1.8.16",
+    "typescript": "^5.9.3"
   }
 }

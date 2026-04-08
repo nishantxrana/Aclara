@@ -32,5 +32,12 @@ Thumbs.db
 # Vite
 apps/frontend/.vite/
 
+# Production SPA copied into backend for App Service deploy
+apps/backend/public/
+
+# CI staging (Azure deploy artifact)
+.azure-deploy/
+staging-deploy/
+
 # Test / coverage
 coverage/
