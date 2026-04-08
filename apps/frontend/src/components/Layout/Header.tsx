@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { uxEvent } from "@/lib/uxTelemetry";
 import { useVisualizerStore } from "@/stores/visualizer.store";
 
+import { AclaraBrandMark } from "@/components/Layout/AclaraBrandMark";
 import { ThemeToggle } from "@/components/Layout/ThemeToggle";
 
 import { ProjectPicker } from "./ProjectPicker";
@@ -126,7 +127,7 @@ export function Header(props: { readonly layout?: HeaderLayout }): JSX.Element {
   return (
     <header className="flex shrink-0 flex-wrap items-center gap-4 border-b border-line-soft bg-panel px-4 py-3 shadow-panel">
       <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-lg font-semibold tracking-tight text-brand-primary">Aclara</span>
+        <AclaraBrandMark />
         {connectionLabel !== null ? (
           <span className="text-label uppercase tracking-wide text-ink-tertiary">
             {connectionLabel}

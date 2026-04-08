@@ -8,6 +8,7 @@ import {
   useSessionStatus,
   type ApiHttpError,
 } from "@/api/aclara.api";
+import { AclaraBrandMark } from "@/components/Layout/AclaraBrandMark";
 import { ThemeToggle } from "@/components/Layout/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import { uxEvent } from "@/lib/uxTelemetry";
@@ -94,7 +95,7 @@ export function ConnectScreen(): JSX.Element {
   if (sessionStatus.isPending) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-page px-4 text-ink-primary">
-        <p className="text-lg font-semibold tracking-tight text-brand-primary">Aclara</p>
+        <AclaraBrandMark />
         <p className="mt-3 text-sm text-ink-secondary">Checking connection…</p>
       </div>
     );
@@ -110,7 +111,9 @@ export function ConnectScreen(): JSX.Element {
     <div className="flex min-h-screen flex-col bg-page text-ink-primary">
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-line-soft bg-panel px-6 py-4 shadow-panel">
         <div className="min-w-0 flex-1">
-          <h1 className="text-lg font-semibold tracking-tight text-brand-primary">Aclara</h1>
+          <h1 className="m-0">
+            <AclaraBrandMark />
+          </h1>
           <p className="mt-1 max-w-xl text-sm text-ink-secondary">
             Connect to Azure DevOps to map Git access, group membership, and permission paths in your
             projects.
