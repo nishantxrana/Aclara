@@ -293,11 +293,11 @@ export function AccessTracePanel(): JSX.Element {
 
             {!traceQuery.data.hasAccess ? (
               <div
-                className="rounded-input border border-status-warning/40 bg-status-warning-soft px-3 py-2 text-xs text-amber-950"
+                className="rounded-input border border-status-warning/40 bg-status-warning-soft px-3 py-2 text-xs text-ink-on-warning-soft"
                 role="status"
               >
                 <p className="font-medium">No effective access</p>
-                <p className="mt-1 text-amber-950/90">
+                <p className="mt-1 text-ink-on-warning-soft/90">
                   This user does not have Git access to the selected repository under current ACLs
                   and group memberships.
                 </p>

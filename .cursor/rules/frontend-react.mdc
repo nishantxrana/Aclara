@@ -35,8 +35,8 @@ alwaysApply: false
 
 ## Styling
 - Tailwind CSS utility classes only — no inline styles, no CSS modules (React Flow edge labels may use `style` for transform/position where required)
-- Light theme is default per `design.json`; optional `.dark` on `<html>` uses variables in `src/index.css`
-- Semantic colors: prefer `bg-page`, `bg-panel`, `text-ink-*`, `border-line-*`, `brand.*` from `tailwind.config.ts` / `src/theme/designTokens.ts`, not ad hoc hex in JSX
+- Theme: `ThemeProvider` + `useTheme()`; `class="dark"` on `<html>` toggles CSS variables in `src/index.css` / `tailwind.config.ts`. Preference key: `insightops-theme` (localStorage). Light is default.
+- Semantic colors: prefer `bg-page`, `bg-panel`, `text-ink-*`, `text-ink-on-warning-soft`, `border-line-*`, `brand.*`, `status.*` — not raw Tailwind palette (`amber-*`, etc.) or ad hoc hex in JSX
 - Responsive not required for POC — optimize for 1280px+ desktop
 
 ## API Layer

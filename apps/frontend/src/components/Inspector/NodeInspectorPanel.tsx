@@ -85,7 +85,7 @@ export function NodeInspectorPanel(): JSX.Element | null {
       </div>
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-3 text-xs">
         {node.isOverPrivileged === true ? (
-          <p className="rounded-input border border-status-warning/40 bg-status-warning-soft px-2 py-1 text-amber-950">
+          <p className="rounded-input border border-status-warning/40 bg-status-warning-soft px-2 py-1 text-ink-on-warning-soft">
             Flagged for elevated / sensitive Git permissions.
           </p>
         ) : null}

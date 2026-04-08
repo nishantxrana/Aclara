@@ -8,6 +8,7 @@ import {
   useSessionStatus,
   type ApiHttpError,
 } from "@/api/insightops.api";
+import { ThemeToggle } from "@/components/Layout/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import { uxEvent } from "@/lib/uxTelemetry";
 import {
@@ -107,12 +108,15 @@ export function ConnectScreen(): JSX.Element {
 
   return (
     <div className="flex min-h-screen flex-col bg-page text-ink-primary">
-      <header className="border-b border-line-soft bg-panel px-6 py-4 shadow-panel">
-        <h1 className="text-lg font-semibold tracking-tight text-brand-primary">InsightOps</h1>
-        <p className="mt-1 max-w-xl text-sm text-ink-secondary">
-          Connect to Azure DevOps to map Git access, group membership, and permission paths in your
-          projects.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-line-soft bg-panel px-6 py-4 shadow-panel">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-lg font-semibold tracking-tight text-brand-primary">InsightOps</h1>
+          <p className="mt-1 max-w-xl text-sm text-ink-secondary">
+            Connect to Azure DevOps to map Git access, group membership, and permission paths in your
+            projects.
+          </p>
+        </div>
+        <ThemeToggle />
       </header>
       <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-6 py-10">
         {showVaultPrimary ? (
@@ -221,11 +225,11 @@ export function ConnectScreen(): JSX.Element {
                   value={pat}
                 />
               </div>
-              <details className="rounded-input border border-status-warning/35 bg-status-warning-soft p-3 text-xs text-amber-950">
-                <summary className="cursor-pointer font-medium text-amber-950">
+              <details className="rounded-input border border-status-warning/35 bg-status-warning-soft p-3 text-xs text-ink-on-warning-soft">
+                <summary className="cursor-pointer font-medium text-ink-on-warning-soft">
                   Security recommendations
                 </summary>
-                <ul className="mt-2 list-inside list-disc space-y-1 text-amber-950/90">
+                <ul className="mt-2 list-inside list-disc space-y-1 text-ink-on-warning-soft/90">
                   <li>Use a short-lived PAT and rotate it after audits.</li>
                   <li>Minimum scopes: Code (read), Graph (read), Project and team (read).</li>
                   <li>The PAT is held in an HttpOnly session via your local API — not embedded in the SPA.</li>

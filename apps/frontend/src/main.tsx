@@ -8,6 +8,7 @@ import { BrowserRouter } from "react-router-dom";
 
 import App from "./App";
 import "./index.css";
+import { ThemeProvider } from "@/theme/ThemeProvider";
 
 const rqLog = createLogger("react-query");
 
@@ -38,9 +39,11 @@ if (rootEl === null) {
 createRoot(rootEl).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </ThemeProvider>
     </QueryClientProvider>
   </StrictMode>
 );

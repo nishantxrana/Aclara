@@ -4,32 +4,62 @@
 @tailwind components;
 @tailwind utilities;
 
-/* design.json → CSS variables (light theme default; `.dark` reserved for future theme) */
+/**
+ * Semantic tokens from `design.json` (`colorSystem.themes`).
+ * RGB triplets (space-separated) support Tailwind opacity modifiers, e.g. `bg-brand-primary/12`.
+ * Full-color vars (`var(--color-brand-primary-soft)`) are used where alpha stacking is not needed.
+ */
 :root {
-  --color-bg-page: #eef5ff;
-  --color-bg-canvas: #fdfeff;
-  --color-bg-panel: #ffffff;
-  --color-bg-panel-subtle: #f7faff;
-  --color-bg-panel-muted: #f3f7fc;
+  --color-bg-page: 238 245 255;
+  --color-bg-canvas: 253 254 255;
+  --color-bg-panel: 255 255 255;
+  --color-bg-panel-subtle: 247 250 255;
+  --color-bg-panel-muted: 243 247 252;
 
-  --color-ink-primary: #0f172a;
-  --color-ink-secondary: #5b6b84;
-  --color-ink-tertiary: #8a97ab;
+  --color-ink-primary: 15 23 42;
+  --color-ink-secondary: 91 107 132;
+  --color-ink-tertiary: 138 151 171;
+  --color-ink-inverse: 255 255 255;
 
-  --color-line-soft: #e6ecf5;
-  --color-line-default: #d9e4f2;
-  --color-line-strong: #c8d6e8;
+  --color-foreground-on-success-soft: 6 95 70;
+  --color-foreground-on-danger-soft: 153 27 27;
+  --color-foreground-on-warning-soft: 120 53 15;
+  --color-foreground-on-info-soft: 30 58 95;
 
-  --color-brand-primary: #3b82f6;
-  --color-brand-primary-hover: #2f6fe0;
+  --color-line-soft: 230 236 245;
+  --color-line-default: 217 228 242;
+  --color-line-strong: 200 214 232;
+
+  --color-brand-primary: 59 130 246;
+  --color-brand-primary-hover: 47 111 224;
   --color-brand-primary-soft: #e8f1ff;
-  --color-brand-selection: #a855f7;
+  --color-brand-secondary: 82 199 234;
+  --color-brand-secondary-soft: #e7faff;
+  --color-brand-selection: 168 85 247;
   --color-brand-selection-soft: #f4e9ff;
 
-  --color-status-success: #19b36b;
-  --color-status-warning: #f59e0b;
-  --color-status-danger: #f05a67;
-  --color-status-info: #4b8dff;
+  --color-node-user: 59 130 246;
+  --color-node-group: 155 107 255;
+  --color-node-repo: 37 195 176;
+  --color-data-slate: 145 164 188;
+
+  --color-status-success: 25 179 107;
+  --color-status-success-soft: #e9fbf2;
+  --color-status-warning: 245 158 11;
+  --color-status-warning-soft: #fff5dd;
+  --color-status-danger: 240 90 103;
+  --color-status-danger-soft: #fff0f2;
+  --color-status-info: 75 141 255;
+  --color-status-info-soft: #eaf2ff;
+
+  --color-permission-edge-allow: #19b36b;
+  --color-permission-edge-deny: #f05a67;
+  --color-permission-edge-inherited-allow: #2dd48a;
+  --color-permission-edge-inherited-deny: #f87171;
+  --color-permission-edge-not-set: #91a4bc;
+  --color-permission-edge-elevated: #f59e0b;
+
+  --color-graph-edge-membership: #91a4bc;
 
   --shadow-panel-sm: 0 6px 16px rgba(18, 36, 74, 0.06);
   --shadow-panel-md: 0 12px 32px rgba(18, 36, 74, 0.08);
@@ -40,27 +70,65 @@
 }
 
 .dark {
-  --color-bg-page: #0f1419;
-  --color-bg-canvas: #131a22;
-  --color-bg-panel: #1a2332;
-  --color-bg-panel-subtle: #1e293b;
-  --color-bg-panel-muted: #172033;
+  --color-bg-page: 15 23 36;
+  --color-bg-canvas: 17 26 36;
+  --color-bg-panel: 22 33 48;
+  --color-bg-panel-subtle: 26 38 55;
+  --color-bg-panel-muted: 19 32 51;
 
-  --color-ink-primary: #f1f5f9;
-  --color-ink-secondary: #94a3b8;
-  --color-ink-tertiary: #64748b;
+  --color-ink-primary: 230 237 247;
+  --color-ink-secondary: 168 182 201;
+  --color-ink-tertiary: 126 141 163;
+  --color-ink-inverse: 15 23 42;
 
-  --color-line-soft: #334155;
-  --color-line-default: #475569;
-  --color-line-strong: #64748b;
+  --color-foreground-on-success-soft: 110 231 183;
+  --color-foreground-on-danger-soft: 252 165 165;
+  --color-foreground-on-warning-soft: 252 211 77;
+  --color-foreground-on-info-soft: 147 197 253;
 
-  --color-brand-primary-soft: rgba(59, 130, 246, 0.15);
-  --color-brand-selection-soft: rgba(168, 85, 247, 0.12);
+  --color-line-soft: 36 50 68;
+  --color-line-default: 49 66 87;
+  --color-line-strong: 67 87 114;
+
+  --color-brand-primary: 103 164 255;
+  --color-brand-primary-hover: 123 176 255;
+  --color-brand-primary-soft: rgba(103, 164, 255, 0.18);
+  --color-brand-secondary: 99 211 242;
+  --color-brand-secondary-soft: rgba(99, 211, 242, 0.16);
+  --color-brand-selection: 183 132 255;
+  --color-brand-selection-soft: rgba(183, 132, 255, 0.16);
+
+  --color-node-user: 103 164 255;
+  --color-node-group: 183 132 255;
+  --color-node-repo: 70 210 188;
+  --color-data-slate: 139 163 188;
+
+  --color-status-success: 51 194 127;
+  --color-status-success-soft: rgba(51, 194, 127, 0.14);
+  --color-status-warning: 251 191 36;
+  --color-status-warning-soft: rgba(251, 191, 36, 0.12);
+  --color-status-danger: 255 125 139;
+  --color-status-danger-soft: rgba(255, 125, 139, 0.12);
+  --color-status-info: 103 164 255;
+  --color-status-info-soft: rgba(103, 164, 255, 0.14);
+
+  --color-permission-edge-allow: #33c27f;
+  --color-permission-edge-deny: #ff7d8b;
+  --color-permission-edge-inherited-allow: #54d89b;
+  --color-permission-edge-inherited-deny: #ff9aa4;
+  --color-permission-edge-not-set: #8ba3bc;
+  --color-permission-edge-elevated: #fbbf24;
+
+  --color-graph-edge-membership: #8ba3bc;
+
+  --shadow-panel-sm: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-panel-md: 0 16px 40px rgba(0, 0, 0, 0.42);
+  --shadow-panel-lg: 0 22px 56px rgba(0, 0, 0, 0.48);
 }
 
 @layer base {
   html {
-    @apply antialiased;
+    @apply antialiased transition-colors duration-standard ease-standard;
   }
 
   body {
@@ -77,7 +145,7 @@
 @layer utilities {
   .project-picker-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: var(--color-line-strong) var(--color-bg-panel-muted);
+    scrollbar-color: rgb(var(--color-line-strong) / 1) rgb(var(--color-bg-panel-muted) / 1);
   }
 
   .project-picker-scrollbar::-webkit-scrollbar {
@@ -85,16 +153,16 @@
   }
 
   .project-picker-scrollbar::-webkit-scrollbar-track {
-    background: var(--color-bg-panel-muted);
+    background: rgb(var(--color-bg-panel-muted) / 1);
     border-radius: 9999px;
   }
 
   .project-picker-scrollbar::-webkit-scrollbar-thumb {
-    background: var(--color-line-strong);
+    background: rgb(var(--color-line-strong) / 1);
     border-radius: 9999px;
   }
 
   .project-picker-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: var(--color-line-default);
+    background: rgb(var(--color-line-default) / 1);
   }
 }

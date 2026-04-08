@@ -34,7 +34,7 @@ export function ProjectEntryScreen(): JSX.Element {
       </div>
 
       {urlError !== null ? (
-        <p className="rounded-input border border-status-warning/35 bg-status-warning-soft px-3 py-2 text-sm text-amber-950">
+        <p className="rounded-input border border-status-warning/35 bg-status-warning-soft px-3 py-2 text-sm text-ink-on-warning-soft">
           Could not open linked project{" "}
           <span className="font-medium">{urlError}</span>. Select a valid project below.
         </p>

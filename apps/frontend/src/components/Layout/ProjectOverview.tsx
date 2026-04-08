@@ -154,7 +154,7 @@ export function ProjectOverview(): JSX.Element {
           </p>
         </button>
         <button
-          className={`${cardBase} hover:border-status-warning/40 hover:bg-status-warning-soft/50`}
+          className={`${cardBase} hover:border-status-warning/40 hover:bg-status-warning/10`}
           onClick={() => {
             launchInvestigation("risk_posture", () => {
               setWorkspaceView("investigate");
@@ -212,8 +212,8 @@ export function ProjectOverview(): JSX.Element {
       ) : null}
 
       <div className="rounded-panel border border-status-warning/30 bg-status-warning-soft p-4">
-        <p className="text-sm font-medium text-amber-950">Risk posture</p>
-        <p className="mt-1 text-sm text-amber-950/90">
+        <p className="text-sm font-medium text-ink-on-warning-soft">Risk posture</p>
+        <p className="mt-1 text-sm text-ink-on-warning-soft/90">
           {summary.hasAny
             ? summary.summaryLine
             : "No identities flagged for sensitive Git permission bits in this snapshot."}

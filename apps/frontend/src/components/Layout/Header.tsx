@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/Button";
 import { uxEvent } from "@/lib/uxTelemetry";
 import { useVisualizerStore } from "@/stores/visualizer.store";
 
+import { ThemeToggle } from "@/components/Layout/ThemeToggle";
+
 import { ProjectPicker } from "./ProjectPicker";
 
 function formatSyncedAt(iso: string | undefined): string {
@@ -178,6 +180,7 @@ export function Header(props: { readonly layout?: HeaderLayout }): JSX.Element {
       )}
 
       <div className="flex shrink-0 flex-wrap items-center gap-2">
+        <ThemeToggle />
         {layout === "workspace" ? (
           <Button
             className="text-xs"

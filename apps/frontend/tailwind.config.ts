@@ -1,65 +1,70 @@
 import type { Config } from "tailwindcss";
 
-import { colors as ds } from "./src/theme/designTokens";
-
 export default {
   darkMode: "class",
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        page: ds.bg.page,
-        canvas: ds.bg.canvas,
+        page: "rgb(var(--color-bg-page) / <alpha-value>)",
+        canvas: "rgb(var(--color-bg-canvas) / <alpha-value>)",
         panel: {
-          DEFAULT: ds.bg.panel,
-          subtle: ds.bg.panelSubtle,
-          muted: ds.bg.panelMuted,
+          DEFAULT: "rgb(var(--color-bg-panel) / <alpha-value>)",
+          subtle: "rgb(var(--color-bg-panel-subtle) / <alpha-value>)",
+          muted: "rgb(var(--color-bg-panel-muted) / <alpha-value>)",
         },
         ink: {
-          primary: ds.text.primary,
-          secondary: ds.text.secondary,
-          tertiary: ds.text.tertiary,
-          inverse: ds.text.inverse,
+          primary: "rgb(var(--color-ink-primary) / <alpha-value>)",
+          secondary: "rgb(var(--color-ink-secondary) / <alpha-value>)",
+          tertiary: "rgb(var(--color-ink-tertiary) / <alpha-value>)",
+          inverse: "rgb(var(--color-ink-inverse) / <alpha-value>)",
+          "on-success-soft":
+            "rgb(var(--color-foreground-on-success-soft) / <alpha-value>)",
+          "on-danger-soft":
+            "rgb(var(--color-foreground-on-danger-soft) / <alpha-value>)",
+          "on-warning-soft":
+            "rgb(var(--color-foreground-on-warning-soft) / <alpha-value>)",
+          "on-info-soft": "rgb(var(--color-foreground-on-info-soft) / <alpha-value>)",
         },
         line: {
-          soft: ds.border.soft,
-          DEFAULT: ds.border.default,
-          strong: ds.border.strong,
+          soft: "rgb(var(--color-line-soft) / <alpha-value>)",
+          DEFAULT: "rgb(var(--color-line-default) / <alpha-value>)",
+          strong: "rgb(var(--color-line-strong) / <alpha-value>)",
         },
         brand: {
-          primary: ds.brand.primary,
-          hover: ds.brand.primaryHover,
-          soft: ds.brand.primarySoft,
-          selection: ds.brand.selection,
-          "selection-soft": ds.brand.selectionSoft,
-          secondary: ds.brand.secondary,
-          "secondary-soft": ds.brand.secondarySoft,
+          primary: "rgb(var(--color-brand-primary) / <alpha-value>)",
+          hover: "rgb(var(--color-brand-primary-hover) / <alpha-value>)",
+          soft: "var(--color-brand-primary-soft)",
+          selection: "rgb(var(--color-brand-selection) / <alpha-value>)",
+          "selection-soft": "var(--color-brand-selection-soft)",
+          secondary: "rgb(var(--color-brand-secondary) / <alpha-value>)",
+          "secondary-soft": "var(--color-brand-secondary-soft)",
         },
         node: {
-          user: ds.data.blue,
-          group: ds.data.violet,
-          repo: ds.data.teal,
+          user: "rgb(var(--color-node-user) / <alpha-value>)",
+          group: "rgb(var(--color-node-group) / <alpha-value>)",
+          repo: "rgb(var(--color-node-repo) / <alpha-value>)",
         },
         status: {
-          allow: ds.status.success,
-          deny: ds.status.danger,
-          inherited: ds.data.slate,
-          success: ds.status.success,
-          "success-soft": ds.status.successSoft,
-          warning: ds.status.warning,
-          "warning-soft": ds.status.warningSoft,
-          danger: ds.status.danger,
-          "danger-soft": ds.status.dangerSoft,
-          info: ds.status.info,
-          "info-soft": ds.status.infoSoft,
+          allow: "rgb(var(--color-status-success) / <alpha-value>)",
+          deny: "rgb(var(--color-status-danger) / <alpha-value>)",
+          inherited: "rgb(var(--color-data-slate) / <alpha-value>)",
+          success: "rgb(var(--color-status-success) / <alpha-value>)",
+          "success-soft": "var(--color-status-success-soft)",
+          warning: "rgb(var(--color-status-warning) / <alpha-value>)",
+          "warning-soft": "var(--color-status-warning-soft)",
+          danger: "rgb(var(--color-status-danger) / <alpha-value>)",
+          "danger-soft": "var(--color-status-danger-soft)",
+          info: "rgb(var(--color-status-info) / <alpha-value>)",
+          "info-soft": "var(--color-status-info-soft)",
         },
         /** @deprecated Use semantic `page` / `panel` — kept for gradual migration */
         surface: {
-          DEFAULT: ds.bg.panelMuted,
-          light: ds.bg.panelSubtle,
+          DEFAULT: "rgb(var(--color-bg-panel-muted) / <alpha-value>)",
+          light: "rgb(var(--color-bg-panel-subtle) / <alpha-value>)",
         },
         /** @deprecated Use `brand.primary` */
-        primary: ds.brand.primary,
+        primary: "rgb(var(--color-brand-primary) / <alpha-value>)",
       },
       fontFamily: {
         sans: [

@@ -22,7 +22,11 @@ function strokeForPermissionEdge(
   if (isElevated && level !== "deny" && level !== "inherited-deny") {
     return ELEVATED_PERMISSION_EDGE_STROKE;
   }
-  return PERMISSION_EDGE_STROKE[level] ?? PERMISSION_EDGE_STROKE["not-set"] ?? "#64748b";
+  return (
+    PERMISSION_EDGE_STROKE[level] ??
+    PERMISSION_EDGE_STROKE["not-set"] ??
+    "var(--color-permission-edge-not-set)"
+  );
 }
 
 function dashForLevel(level: PermissionLevel): string | undefined {

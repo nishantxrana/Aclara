@@ -24,8 +24,9 @@ import {
 import { createLogger } from "@/utils/logger";
 import { useVisualizerStore } from "@/stores/visualizer.store";
 import { layoutWithDagreLR } from "@/utils/dagreLayout";
-import { colors } from "@/theme/designTokens";
-import { GRAPH_NODE_COLORS } from "@/theme/graphColors";
+import { getGraphTheme } from "@/theme/designTokens";
+import { getGraphNodeColors } from "@/theme/graphColors";
+import { useTheme } from "@/theme/ThemeProvider";
 import { isGraphNodeSelected, repoIdFromNodeId } from "@/utils/graphIds";
 
 import {
@@ -54,6 +55,9 @@ const edgeTypes: EdgeTypes = {
 const canvasLog = createLogger("GraphCanvas");
 
 function GraphCanvasInner(): JSX.Element {
+  const { theme } = useTheme();
+  const graphTheme = getGraphTheme(theme);
+  const graphNodeColors = getGraphNodeColors(theme);
   const { fitView, setViewport, getViewport } = useReactFlow();
   const selectedProjectName = useVisualizerStore((s) => s.selectedProjectName);
   const filterText = useVisualizerStore((s) => s.filterText);
@@ -388,22 +392,22 @@ function GraphCanvasInner(): JSX.Element {
         zoomOnDoubleClick={false}
       >
         <SwimLaneLegend />
-        <Background color={colors.graph.gridDot} gap={20} />
+        <Background color={graphTheme.grid} gap={20} />
         <Controls className="!border-line-default !bg-panel !shadow-panel-md [&_button]:!fill-ink-secondary" />
         <MiniMap
           className="!rounded-md !border !border-line-default !bg-panel/95 hidden lg:block"
-          maskColor="rgba(15, 23, 42, 0.12)"
+          maskColor={graphTheme.minimapMask}
           nodeColor={(n) => {
             if (n.type === "user") {
-              return GRAPH_NODE_COLORS.user;
+              return graphNodeColors.user;
             }
             if (n.type === "group") {
-              return GRAPH_NODE_COLORS.group;
+              return graphNodeColors.group;
             }
             if (n.type === "repo") {
-              return GRAPH_NODE_COLORS.repo;
+              return graphNodeColors.repo;
             }
-            return GRAPH_NODE_COLORS.fallback;
+            return graphNodeColors.fallback;
           }}
           pannable
           zoomable

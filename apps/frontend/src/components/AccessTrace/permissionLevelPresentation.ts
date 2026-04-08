@@ -46,13 +46,13 @@ export function timelineDotClassForLevel(level: PermissionLevel): string {
 export function chipClassForLevel(level: PermissionLevel): string {
   switch (level) {
     case "allow":
-      return "border-status-success/40 bg-status-success-soft text-emerald-800";
+      return "border-status-success/40 bg-status-success-soft text-ink-on-success-soft";
     case "deny":
-      return "border-status-danger/40 bg-status-danger-soft text-red-800";
+      return "border-status-danger/40 bg-status-danger-soft text-ink-on-danger-soft";
     case "inherited-allow":
       return "border-line-default bg-panel-muted text-ink-secondary";
     case "inherited-deny":
-      return "border-status-warning/45 bg-status-warning-soft text-amber-900";
+      return "border-status-warning/45 bg-status-warning-soft text-ink-on-warning-soft";
     case "not-set":
       return "border-line-default bg-panel-subtle text-ink-tertiary";
     default: {

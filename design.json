@@ -172,8 +172,157 @@
         "infoSoft": "#EAF2FF"
       }
     },
+    "themes": {
+      "light": {
+        "background": {
+          "base": "#EEF5FF",
+          "baseAlt": "#E8F2FF",
+          "canvas": "#FDFEFF",
+          "surface": "#FFFFFF",
+          "surfaceSubtle": "#F7FAFF",
+          "surfaceElevated": "#FFFFFF",
+          "surfaceMuted": "#F3F7FC"
+        },
+        "text": {
+          "primary": "#0F172A",
+          "secondary": "#5B6B84",
+          "muted": "#8A97AB",
+          "inverse": "#FFFFFF",
+          "onSuccessSoft": "#065F46",
+          "onDangerSoft": "#991B1B",
+          "onWarningSoft": "#78350F",
+          "onInfoSoft": "#1E3A5F"
+        },
+        "border": {
+          "soft": "#E6ECF5",
+          "default": "#D9E4F2",
+          "strong": "#C8D6E8",
+          "divider": "#D9E4F2"
+        },
+        "accent": {
+          "brand": "#3B82F6",
+          "brandHover": "#2F6FE0",
+          "brandSoft": "#E8F1FF",
+          "secondary": "#52C7EA",
+          "secondarySoft": "#E7FAFF",
+          "selection": "#A855F7",
+          "selectionSoft": "#F4E9FF"
+        },
+        "graph": {
+          "canvas": "#FDFEFF",
+          "grid": "#D9E4F2",
+          "nodeUser": "#3B82F6",
+          "nodeGroup": "#9B6BFF",
+          "nodeRepo": "#25C3B0",
+          "nodeFallback": "#91A4BC",
+          "edgeMembership": "#91A4BC",
+          "edgeAllow": "#19B36B",
+          "edgeDeny": "#F05A67",
+          "edgeInheritedAllow": "#2DD48A",
+          "edgeInheritedDeny": "#F87171",
+          "edgeNotSet": "#91A4BC",
+          "highlight": "#A855F7",
+          "minimapMask": "rgba(15, 23, 42, 0.12)"
+        },
+        "status": {
+          "success": "#19B36B",
+          "successSoft": "#E9FBF2",
+          "warning": "#F59E0B",
+          "warningSoft": "#FFF5DD",
+          "danger": "#F05A67",
+          "dangerSoft": "#FFF0F2",
+          "info": "#4B8DFF",
+          "infoSoft": "#EAF2FF"
+        },
+        "state": {
+          "hover": "rgba(59, 130, 246, 0.10)",
+          "active": "rgba(59, 130, 246, 0.16)",
+          "selected": "rgba(168, 85, 247, 0.14)",
+          "disabled": "rgba(138, 151, 171, 0.45)"
+        },
+        "shadow": {
+          "sm": "0 6px 16px rgba(18, 36, 74, 0.06)",
+          "md": "0 12px 32px rgba(18, 36, 74, 0.08)",
+          "lg": "0 18px 48px rgba(18, 36, 74, 0.10)"
+        }
+      },
+      "dark": {
+        "background": {
+          "base": "#0F1724",
+          "baseAlt": "#121C2B",
+          "canvas": "#111A24",
+          "surface": "#162130",
+          "surfaceSubtle": "#1A2637",
+          "surfaceElevated": "#1D2A3C",
+          "surfaceMuted": "#132033"
+        },
+        "text": {
+          "primary": "#E6EDF7",
+          "secondary": "#A8B6C9",
+          "muted": "#7E8DA3",
+          "inverse": "#0F172A",
+          "onSuccessSoft": "#6EE7B7",
+          "onDangerSoft": "#FCA5A5",
+          "onWarningSoft": "#FCD34D",
+          "onInfoSoft": "#93C5FD"
+        },
+        "border": {
+          "soft": "#243244",
+          "default": "#314257",
+          "strong": "#435772",
+          "divider": "#2A394C"
+        },
+        "accent": {
+          "brand": "#67A4FF",
+          "brandHover": "#7BB0FF",
+          "brandSoft": "rgba(103, 164, 255, 0.18)",
+          "secondary": "#63D3F2",
+          "secondarySoft": "rgba(99, 211, 242, 0.16)",
+          "selection": "#B784FF",
+          "selectionSoft": "rgba(183, 132, 255, 0.16)"
+        },
+        "graph": {
+          "canvas": "#111A24",
+          "grid": "#2A3D52",
+          "nodeUser": "#67A4FF",
+          "nodeGroup": "#B784FF",
+          "nodeRepo": "#46D2BC",
+          "nodeFallback": "#8BA3BC",
+          "edgeMembership": "#8BA3BC",
+          "edgeAllow": "#33C27F",
+          "edgeDeny": "#FF7D8B",
+          "edgeInheritedAllow": "#54D89B",
+          "edgeInheritedDeny": "#FF9AA4",
+          "edgeNotSet": "#8BA3BC",
+          "highlight": "#B784FF",
+          "minimapMask": "rgba(7, 12, 20, 0.45)"
+        },
+        "status": {
+          "success": "#33C27F",
+          "successSoft": "rgba(51, 194, 127, 0.14)",
+          "warning": "#FBBF24",
+          "warningSoft": "rgba(251, 191, 36, 0.12)",
+          "danger": "#FF7D8B",
+          "dangerSoft": "rgba(255, 125, 139, 0.12)",
+          "info": "#67A4FF",
+          "infoSoft": "rgba(103, 164, 255, 0.14)"
+        },
+        "state": {
+          "hover": "rgba(103, 164, 255, 0.12)",
+          "active": "rgba(103, 164, 255, 0.20)",
+          "selected": "rgba(183, 132, 255, 0.20)",
+          "disabled": "rgba(126, 141, 163, 0.38)"
+        },
+        "shadow": {
+          "sm": "0 8px 24px rgba(0, 0, 0, 0.35)",
+          "md": "0 16px 40px rgba(0, 0, 0, 0.42)",
+          "lg": "0 22px 56px rgba(0, 0, 0, 0.48)"
+        }
+      }
+    },
     "usageRules": [
-      "Keep most surfaces white or near-white; color should live in charts, active controls, tags, and highlights.",
+      "Light and dark themes share the same semantic token names (`colorSystem.themes.light` / `dark`); implement UI with CSS variables and Tailwind semantic utilities so switching themes is seamless.",
+      "In light mode keep most surfaces white or near-white; in dark mode use balanced blue-slate surfaces — never pure black or pure white as large fills. Color should live in charts, active controls, tags, and highlights.",
       "Use blue as the primary action and navigation accent.",
       "Use cyan to bring freshness to charts, progress, and auxiliary highlights.",
       "Use violet for selection boxes, editor handles, advanced intelligence cues, or alternate data emphasis.",

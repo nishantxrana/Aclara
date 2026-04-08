@@ -225,7 +225,7 @@ export function Sidebar(): JSX.Element {
               Users and groups flagged for sensitive Git permission bits in this snapshot.
             </p>
             {riskSummary.devMockActive ? (
-              <p className="rounded-input border border-status-warning/40 bg-status-warning-soft px-2 py-1.5 text-label text-amber-900">
+              <p className="rounded-input border border-status-warning/40 bg-status-warning-soft px-2 py-1.5 text-label text-ink-on-warning-soft">
                 Dev mock data is active (VITE_DEV_OVERPRIV_MOCK).
               </p>
             ) : null}
@@ -247,7 +247,7 @@ export function Sidebar(): JSX.Element {
                       {riskSummary.users.map((u) => (
                         <li key={u.id}>
                           <button
-                            className="w-full rounded-md border border-status-warning/30 bg-status-warning-soft px-2 py-1.5 text-left text-xs text-amber-950 hover:bg-status-warning/25"
+                            className="w-full rounded-md border border-status-warning/30 bg-status-warning-soft px-2 py-1.5 text-left text-xs text-ink-on-warning-soft hover:bg-status-warning/25"
                             onClick={() => {
                               setSelectedUser(u.id);
                               setWorkspaceView("investigate");
@@ -255,7 +255,7 @@ export function Sidebar(): JSX.Element {
                             type="button"
                           >
                             <span className="block truncate font-medium">{u.label}</span>
-                            <span className="mt-0.5 block truncate text-label text-amber-900/90">
+                            <span className="mt-0.5 block truncate text-label text-ink-on-warning-soft/90">
                               {u.elevatedSummary}
                             </span>
                           </button>
@@ -271,7 +271,7 @@ export function Sidebar(): JSX.Element {
                       {riskSummary.groups.map((g) => (
                         <li key={g.id}>
                           <button
-                            className="w-full rounded-md border border-status-warning/30 bg-status-warning-soft px-2 py-1.5 text-left text-xs text-amber-950 hover:bg-status-warning/25"
+                            className="w-full rounded-md border border-status-warning/30 bg-status-warning-soft px-2 py-1.5 text-left text-xs text-ink-on-warning-soft hover:bg-status-warning/25"
                             onClick={() => {
                               setInspector(g.id, "group");
                               setWorkspaceView("investigate");
@@ -279,7 +279,7 @@ export function Sidebar(): JSX.Element {
                             type="button"
                           >
                             <span className="block truncate font-medium">{g.label}</span>
-                            <span className="mt-0.5 block truncate text-label text-amber-900/90">
+                            <span className="mt-0.5 block truncate text-label text-ink-on-warning-soft/90">
                               {g.elevatedSummary}
                             </span>
                           </button>

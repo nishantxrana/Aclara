@@ -62,22 +62,22 @@ export function OverPrivilegeBanner(): JSX.Element | null {
       <div className="flex flex-wrap items-center gap-2">
         <ShieldAlert className="h-4 w-4 shrink-0 text-status-warning" aria-hidden />
         {loading ? (
-          <p className="text-xs text-amber-950/90">Loading graph for over-privilege summary…</p>
+          <p className="text-xs text-ink-on-warning-soft/90">Loading graph for over-privilege summary…</p>
         ) : null}
         {graphError ? (
           <p className="text-xs text-status-danger">Could not load graph: {graphQuery.error.message}</p>
         ) : null}
         {!loading && !graphError && summary.hasAny ? (
           <>
-            <p className="min-w-0 flex-1 text-xs text-amber-950">{summary.summaryLine}</p>
+            <p className="min-w-0 flex-1 text-xs text-ink-on-warning-soft">{summary.summaryLine}</p>
             {summary.devMockActive ? (
-              <span className="rounded-md bg-status-warning/25 px-1.5 py-0.5 text-label font-medium uppercase tracking-wide text-amber-950">
+              <span className="rounded-md bg-status-warning/25 px-1.5 py-0.5 text-label font-medium uppercase tracking-wide text-ink-on-warning-soft">
                 Dev mock
               </span>
             ) : null}
             <button
               aria-expanded={expanded}
-              className="flex shrink-0 items-center gap-1 rounded-input border border-status-warning/40 px-2 py-1 text-label font-medium text-amber-950 hover:bg-status-warning/20"
+              className="flex shrink-0 items-center gap-1 rounded-input border border-status-warning/40 px-2 py-1 text-label font-medium text-ink-on-warning-soft hover:bg-status-warning/20"
               onClick={toggleExpanded}
               type="button"
             >
@@ -91,13 +91,13 @@ export function OverPrivilegeBanner(): JSX.Element | null {
           </>
         ) : null}
         {!loading && !graphError && filterOnlyEmpty ? (
-          <p className="text-xs text-amber-950/90">
+          <p className="text-xs text-ink-on-warning-soft/90">
             Over-privileged filter is on, but no identities in this project are flagged with
             sensitive Git permission bits.
           </p>
         ) : null}
         {!loading && !graphError && showOnlyOverPrivileged && summary.hasAny ? (
-          <span className="text-label uppercase tracking-wide text-amber-900/80">
+          <span className="text-label uppercase tracking-wide text-ink-on-warning-soft/80">
             Filter active
           </span>
         ) : null}

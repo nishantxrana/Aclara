@@ -187,7 +187,7 @@ export function FilterBar(): JSX.Element {
       <button
         className={`flex items-center gap-2 rounded-input border px-3 py-1.5 text-xs font-medium ${
           showOnlyOverPrivileged
-            ? "border-status-warning/50 bg-status-warning-soft text-amber-950"
+            ? "border-status-warning/50 bg-status-warning-soft text-ink-on-warning-soft"
             : "border-line-default text-ink-tertiary hover:bg-panel-muted hover:text-ink-primary"
         }`}
         onClick={() => {
