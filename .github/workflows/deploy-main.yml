@@ -2,7 +2,7 @@ name: Deploy to Azure App Service
 
 on:
   push:
-    branches: [main]
+    branches: [cicd-setup]
   workflow_dispatch:
 
 concurrency:
