@@ -3,6 +3,11 @@ name: Deploy to Azure App Service
 on:
   push:
     branches: [main]
+    paths:
+      - "apps/**"
+      - "bun.lock"
+      - "package.json"
+      - ".github/workflows/deploy-main.yml"
   workflow_dispatch:
 
 concurrency:
