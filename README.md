@@ -193,7 +193,7 @@ The client calls the API with **relative URLs** (`/api/...`). In development, Vi
 
 | Layer | Technologies |
 | ----- | -------------- |
-| Runtime / package manager | Bun |
+| Runtime/package manager | Bun |
 | Backend | Node.js, Express, TypeScript, Zod, Axios, dotenv, cors, helmet |
 | Frontend | React 18, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, Zustand, Zod |
 | Graph UI | @xyflow/react (React Flow), @dagrejs/dagre |
@@ -202,4 +202,4 @@ The client calls the API with **relative URLs** (`/api/...`). In development, Vi
 
 ## License
 
-Add a `LICENSE` file or replace this section with your chosen terms before public distribution.
+`LOL😝`
