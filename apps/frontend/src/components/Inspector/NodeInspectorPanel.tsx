@@ -1,7 +1,7 @@
 import { X } from "lucide-react";
 import { useMemo } from "react";
 
-import { useGraph } from "@/api/insightops.api";
+import { useGraph } from "@/api/aclara.api";
 import { Button } from "@/components/ui/Button";
 import { layout } from "@/theme/designTokens";
 import { useVisualizerStore } from "@/stores/visualizer.store";

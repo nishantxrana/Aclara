@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import { useProjects } from "@/api/insightops.api";
+import { useProjects } from "@/api/aclara.api";
 import { AppShell } from "@/components/Layout/AppShell";
 import { Header } from "@/components/Layout/Header";
 import { ProjectContextStrip } from "@/components/Layout/ProjectContextStrip";

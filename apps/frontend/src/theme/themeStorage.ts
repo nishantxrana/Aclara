@@ -1,6 +1,6 @@
 import type { ThemeId } from "@/theme/designTokens";
 
-export const THEME_STORAGE_KEY = "insightops-theme";
+export const THEME_STORAGE_KEY = "aclara-theme";
 
 /**
  * Read persisted theme preference. Defaults to light when missing or invalid.

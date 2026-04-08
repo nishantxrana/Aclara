@@ -3,10 +3,10 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "insightops-access-visualizer",
+      "name": "aclara-access-visualizer",
     },
     "apps/backend": {
-      "name": "@insightops/backend",
+      "name": "@aclara/backend",
       "version": "0.1.0",
       "dependencies": {
         "@types/cors": "^2.8.19",
@@ -24,7 +24,7 @@
       },
     },
     "apps/frontend": {
-      "name": "@insightops/frontend",
+      "name": "@aclara/frontend",
       "version": "0.1.0",
       "dependencies": {
         "@dagrejs/dagre": "^1.1.8",
@@ -52,6 +52,10 @@
     },
   },
   "packages": {
+    "@aclara/backend": ["@aclara/backend@workspace:apps/backend"],
+
+    "@aclara/frontend": ["@aclara/frontend@workspace:apps/frontend"],
+
     "@alloc/quick-lru": ["@alloc/quick-lru@5.2.0", "", {}, "sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw=="],
 
     "@babel/code-frame": ["@babel/code-frame@7.29.0", "", { "dependencies": { "@babel/helper-validator-identifier": "^7.28.5", "js-tokens": "^4.0.0", "picocolors": "^1.1.1" } }, "sha512-9NhCeYjq9+3uxgdtp20LSiJXJvN0FeCtNGpJxuMFZ1Kv3cWUNb6DOhJwUvcVCzKGR66cw4njwM6hrJLqgOwbcw=="],
@@ -141,10 +145,6 @@
     "@esbuild/win32-ia32": ["@esbuild/win32-ia32@0.21.5", "", { "os": "win32", "cpu": "ia32" }, "sha512-SWXFF1CL2RVNMaVs+BBClwtfZSvDgtL//G/smwAc5oVK/UPu2Gu9tIaRgFmYFFKrmg3SyAjSrElf0TiJ1v8fYA=="],
 
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.21.5", "", { "os": "win32", "cpu": "x64" }, "sha512-tQd/1efJuzPC6rCFwEvLtci/xNFcTZknmXs98FYDfGE4wP9ClFV98nyKrzJKVPMhdDnjzLhdUyMX4PsQAPjwIw=="],
-
-    "@insightops/backend": ["@insightops/backend@workspace:apps/backend"],
-
-    "@insightops/frontend": ["@insightops/frontend@workspace:apps/frontend"],
 
     "@jridgewell/gen-mapping": ["@jridgewell/gen-mapping@0.3.13", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.0", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA=="],
 

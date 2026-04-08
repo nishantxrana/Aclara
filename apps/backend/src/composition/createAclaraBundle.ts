@@ -15,7 +15,7 @@ import type {
   AzdoUser,
 } from "@/types/azdo.types";
 
-export interface IInsightOpsBundle {
+export interface IAclaraBundle {
   readonly org: string;
   readonly graphService: GraphService;
   readonly securityService: SecurityService;
@@ -24,7 +24,7 @@ export interface IInsightOpsBundle {
   readonly graphBuilder: GraphBuilderService;
 }
 
-export interface ICreateInsightOpsBundleParams {
+export interface ICreateAclaraBundleParams {
   readonly org: string;
   readonly pat: string;
   readonly projectsCache: Cache<AzdoProject[]>;
@@ -41,7 +41,7 @@ export interface ICreateInsightOpsBundleParams {
  * Builds a per-credential bundle: AzDO client, services, and graph builder.
  * Shared TTL cache instances are keyed by `org + credentialFingerprint(pAT)` inside each service.
  */
-export function createInsightOpsBundle(params: ICreateInsightOpsBundleParams): IInsightOpsBundle {
+export function createAclaraBundle(params: ICreateAclaraBundleParams): IAclaraBundle {
   const fp = credentialFingerprint(params.pat);
   const cacheNs = `${params.org}:${fp}`;
   const client = new AzureDevOpsClient({ org: params.org, pat: params.pat });

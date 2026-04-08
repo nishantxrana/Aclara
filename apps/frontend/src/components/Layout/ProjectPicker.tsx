@@ -9,7 +9,7 @@ import {
   type KeyboardEvent,
 } from "react";
 
-import type { ProjectSummary } from "@/api/insightops.api";
+import type { ProjectSummary } from "@/api/aclara.api";
 import type { RecentProject } from "@/stores/visualizer.store";
 
 export interface ProjectPickerProps {

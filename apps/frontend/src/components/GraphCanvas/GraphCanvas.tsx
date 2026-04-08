@@ -15,7 +15,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, type MouseEvent } from "react";
 import { useShallow } from "zustand/react/shallow";
 
-import { useGraph, useTrace } from "@/api/insightops.api";
+import { useGraph, useTrace } from "@/api/aclara.api";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import {
   computeFocusMutedNodeIds,

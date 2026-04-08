@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { z } from "zod";
 
-import type { IInsightOpsBundle } from "@/composition/createInsightOpsBundle";
+import type { IAclaraBundle } from "@/composition/createAclaraBundle";
 import { asyncHandler } from "@/middleware/asyncHandler";
 
 const TraceQuerySchema = z.object({
@@ -10,7 +10,7 @@ const TraceQuerySchema = z.object({
   repoId: z.string().min(1, "repoId is required"),
 });
 
-export function createTraceRouter(getBundle: (req: Request) => IInsightOpsBundle): Router {
+export function createTraceRouter(getBundle: (req: Request) => IAclaraBundle): Router {
   const router = Router();
 
   router.get(

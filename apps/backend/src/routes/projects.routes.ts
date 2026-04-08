@@ -1,9 +1,9 @@
 import { Router, type Request, type Response } from "express";
 
-import type { IInsightOpsBundle } from "@/composition/createInsightOpsBundle";
+import type { IAclaraBundle } from "@/composition/createAclaraBundle";
 import { asyncHandler } from "@/middleware/asyncHandler";
 
-export function createProjectsRouter(getBundle: (req: Request) => IInsightOpsBundle): Router {
+export function createProjectsRouter(getBundle: (req: Request) => IAclaraBundle): Router {
   const router = Router();
 
   router.get(

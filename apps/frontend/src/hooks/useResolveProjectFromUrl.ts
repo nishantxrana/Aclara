@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import type { ProjectSummary } from "@/api/insightops.api";
+import type { ProjectSummary } from "@/api/aclara.api";
 import { useVisualizerStore } from "@/stores/visualizer.store";
 
 /**

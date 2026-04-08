@@ -1,4 +1,4 @@
-# InsightOps Access Visualizer — Problem & Solution
+# Aclara Access Visualizer — Problem & Solution
 
 ---
 
@@ -64,7 +64,7 @@ permissions are set. There's no direct API that returns `["GenericRead", "Create
 
 ---
 
-## The Solution: InsightOps Access Visualizer
+## The Solution: Aclara Access Visualizer
 
 ### Core Idea
 Pull all the raw data from the Azure DevOps APIs, do the hard work of correlating the two

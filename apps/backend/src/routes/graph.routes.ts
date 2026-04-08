@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { z } from "zod";
 
-import type { IInsightOpsBundle } from "@/composition/createInsightOpsBundle";
+import type { IAclaraBundle } from "@/composition/createAclaraBundle";
 import { asyncHandler } from "@/middleware/asyncHandler";
 import type { ProjectSnapshotService } from "@/services/projectSnapshot.service";
 
@@ -10,7 +10,7 @@ const ProjectQuerySchema = z.object({
 });
 
 export interface IGraphRouterDeps {
-  readonly getBundle: (req: Request) => IInsightOpsBundle;
+  readonly getBundle: (req: Request) => IAclaraBundle;
   readonly getSessionId: (req: Request) => string;
   readonly snapshotService: ProjectSnapshotService;
 }

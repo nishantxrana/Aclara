@@ -2,7 +2,7 @@ import { Expand, GitBranch, ListTree, ScanSearch, ShieldAlert } from "lucide-rea
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 
-import { useGraph, useTrace } from "@/api/insightops.api";
+import { useGraph, useTrace } from "@/api/aclara.api";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { applyGraphTextAndRiskFilter } from "@/lib/graphTextFilter";
 import { filterGraphForViewMode } from "@/lib/graphViewFilter";

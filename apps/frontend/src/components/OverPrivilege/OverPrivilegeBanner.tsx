@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronRight, ShieldAlert } from "lucide-react";
 import { useCallback, useState } from "react";
 
-import { useGraph } from "@/api/insightops.api";
+import { useGraph } from "@/api/aclara.api";
 import type { IFlaggedEntity } from "@/hooks/useOverPrivilegedNodes";
 import { useOverPrivilegedNodes } from "@/hooks/useOverPrivilegedNodes";
 import { useVisualizerStore } from "@/stores/visualizer.store";

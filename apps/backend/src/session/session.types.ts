@@ -1,7 +1,7 @@
 /**
  * Stored server-side session after successful Azure DevOps credential validation.
  */
-export interface InsightOpsSessionRecord {
+export interface AclaraSessionRecord {
   readonly id: string;
   readonly org: string;
   /** PAT is never serialized or logged. */

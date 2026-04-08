@@ -1,9 +1,9 @@
 {
   "meta": {
-    "name": "InsightOps Visual Design Direction",
+    "name": "Aclara Visual Design Direction",
     "version": "1.0.0",
     "purpose": "High-level creative direction and design-system guidance derived from the provided reference screenshots. Use this file to instruct AI and designers to recreate the same visual language consistently across the app.",
-    "productContext": "Apply this style to the InsightOps Access Visualizer so graph exploration, panels, tables, forms, and dashboards all feel like one premium, modern, light SaaS workspace.",
+    "productContext": "Apply this style to the Aclara Access Visualizer so graph exploration, panels, tables, forms, and dashboards all feel like one premium, modern, light SaaS workspace.",
     "referenceStyleSummary": [
       "Soft, premium enterprise SaaS",
       "Light mode first",
@@ -639,7 +639,7 @@
       ]
     },
     "graphCanvas": {
-      "role": "Core exploration surface for InsightOps relationships and access paths.",
+      "role": "Core exploration surface for Aclara relationships and access paths.",
       "look": "A bright canvas with faint grid texture, soft node cards, thin connectors, and vivid but controlled highlights.",
       "guidelines": [
         "Use white or very pale node surfaces with colored accents, not fully saturated node bodies.",

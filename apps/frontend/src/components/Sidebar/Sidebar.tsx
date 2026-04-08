@@ -1,7 +1,7 @@
 import { AlertTriangle, FolderGit2, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { useGraph, useRepos, useUsers } from "@/api/insightops.api";
+import { useGraph, useRepos, useUsers } from "@/api/aclara.api";
 import { useOverPrivilegedNodes } from "@/hooks/useOverPrivilegedNodes";
 import { layout } from "@/theme/designTokens";
 import { useVisualizerStore } from "@/stores/visualizer.store";

@@ -9,7 +9,7 @@ import {
   useUsers,
   type RepoSummary,
   type UserSummary,
-} from "@/api/insightops.api";
+} from "@/api/aclara.api";
 import type { AccessTrace } from "@/types/graph.types";
 import { useVisualizerStore } from "@/stores/visualizer.store";
 

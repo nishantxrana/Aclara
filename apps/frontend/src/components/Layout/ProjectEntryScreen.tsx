@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 
-import { QUERY_KEYS, useProjects } from "@/api/insightops.api";
+import { QUERY_KEYS, useProjects } from "@/api/aclara.api";
 import { Card } from "@/components/ui/Card";
 import { uxEvent } from "@/lib/uxTelemetry";
 import { useVisualizerStore } from "@/stores/visualizer.store";
@@ -28,7 +28,7 @@ export function ProjectEntryScreen(): JSX.Element {
       <div>
         <h1 className="text-xl font-semibold text-ink-primary">Choose a project</h1>
         <p className="mt-2 text-sm text-ink-secondary">
-          InsightOps loads repositories, identities, and Git permissions for one project at a time. Pick the project
+          Aclara loads repositories, identities, and Git permissions for one project at a time. Pick the project
           you want to audit or investigate.
         </p>
       </div>

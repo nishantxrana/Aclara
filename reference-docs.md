@@ -1,4 +1,4 @@
-# InsightOps Access Visualizer — Complete Project Documentation
+# Aclara Access Visualizer — Complete Project Documentation
 
 > **Tech Stack:** React + TypeScript · Node.js (Express) · Bun (package manager / runtime) · Azure DevOps REST APIs
 
@@ -250,7 +250,7 @@ Create `apps/frontend/.env`:
 
 ```env
 VITE_API_BASE_URL=http://localhost:3001/api
-VITE_APP_TITLE=InsightOps Access Visualizer
+VITE_APP_TITLE=Aclara Access Visualizer
 ```
 
 ### 4.3 How to Create a PAT Token (Step-by-Step)
@@ -259,7 +259,7 @@ VITE_APP_TITLE=InsightOps Access Visualizer
 2. Click your **profile icon** (top right) → **Personal access tokens**
 3. Click **+ New Token**
 4. Configure:
-   - **Name**: `InsightOps-Visualizer`
+   - **Name**: `Aclara-Visualizer`
    - **Organization**: Your org
    - **Expiration**: 90 days (or custom)
    - **Scopes** — Select **Custom defined**, then enable:
@@ -285,7 +285,7 @@ VITE_APP_TITLE=InsightOps Access Visualizer
 ## 5. Project Structure
 
 ```
-insightops-access-visualizer/
+aclara-access-visualizer/
 ├── apps/
 │   ├── backend/
 │   │   ├── src/
@@ -319,7 +319,7 @@ insightops-access-visualizer/
 │   └── frontend/
 │       ├── src/
 │       │   ├── api/
-│       │   │   └── insightops.api.ts       # React Query hooks + API calls
+│       │   │   └── aclara.api.ts       # React Query hooks + API calls
 │       │   ├── components/
 │       │   │   ├── GraphCanvas/
 │       │   │   │   ├── GraphCanvas.tsx     # react-flow canvas
@@ -366,7 +366,7 @@ insightops-access-visualizer/
 ### Prompt to give Cursor for generating the rules:
 
 ```
-Generate a .cursorrules file for a project called "InsightOps Access Visualizer".
+Generate a .cursorrules file for a project called "Aclara Access Visualizer".
 
 The project is a fullstack TypeScript application:
 - Backend: Node.js + Express, written in TypeScript, using Bun as package manager
@@ -408,7 +408,7 @@ Rules to enforce:
 ---
 
 ```
-You are building "InsightOps Access Visualizer" — a fullstack TypeScript application that
+You are building "Aclara Access Visualizer" — a fullstack TypeScript application that
 visualizes Azure DevOps access control. Read the entire prompt before writing any code.
 
 ═══════════════════════════════════════════════════════
@@ -430,7 +430,7 @@ MONOREPO STRUCTURE
 ═══════════════════════════════════════════════════════
 Create a monorepo with this structure:
 
-insightops-access-visualizer/
+aclara-access-visualizer/
 ├── apps/
 │   ├── backend/    (Express API server)
 │   └── frontend/   (React + Vite app)
@@ -639,7 +639,7 @@ FRONTEND: COMPLETE IMPLEMENTATION
 ── 3. Types (apps/frontend/src/types/graph.types.ts) ──
 Mirror the backend graph types (or share via a types package).
 
-── 4. API Layer (apps/frontend/src/api/insightops.api.ts) ──
+── 4. API Layer (apps/frontend/src/api/aclara.api.ts) ──
 React Query hooks:
   useGraph(project): returns AccessGraph
   useTrace(userId, repoId, project): returns AccessTrace (enabled only when both set)
@@ -895,5 +895,5 @@ App
 
 ---
 
-*Generated for InsightOps Access Visualizer — April 2025*
+*Generated for Aclara Access Visualizer — April 2025*
 *Azure DevOps API Version: 7.1 | Stack: React + TypeScript + Node.js + Bun*

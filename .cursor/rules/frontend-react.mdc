@@ -35,12 +35,12 @@ alwaysApply: false
 
 ## Styling
 - Tailwind CSS utility classes only — no inline styles, no CSS modules (React Flow edge labels may use `style` for transform/position where required)
-- Theme: `ThemeProvider` + `useTheme()`; `class="dark"` on `<html>` toggles CSS variables in `src/index.css` / `tailwind.config.ts`. Preference key: `insightops-theme` (localStorage). Light is default.
+- Theme: `ThemeProvider` + `useTheme()`; `class="dark"` on `<html>` toggles CSS variables in `src/index.css` / `tailwind.config.ts`. Preference key: `aclara-theme` (localStorage). Light is default.
 - Semantic colors: prefer `bg-page`, `bg-panel`, `text-ink-*`, `text-ink-on-warning-soft`, `border-line-*`, `brand.*`, `status.*` — not raw Tailwind palette (`amber-*`, etc.) or ad hoc hex in JSX
 - Responsive not required for POC — optimize for 1280px+ desktop
 
 ## API Layer
-- All API calls via React Query hooks in `src/api/insightops.api.ts`
+- All API calls via React Query hooks in `src/api/aclara.api.ts`
 - Never call `fetch` directly in components
 - Query keys are centralized constants: `QUERY_KEYS.graph(project)`, etc.
 - Show loading skeletons, not spinners, for initial data fetch

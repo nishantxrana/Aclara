@@ -1,17 +1,17 @@
 import express, { type Request, type Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
-import { createInsightOpsBundle, type IInsightOpsBundle } from "@/composition/createInsightOpsBundle";
-import { InsightOpsBundleRegistry } from "@/composition/insightOpsBundleRegistry";
+import { createAclaraBundle, type IAclaraBundle } from "@/composition/createAclaraBundle";
+import { AclaraBundleRegistry } from "@/composition/aclaraBundleRegistry";
 import { config } from "@/config/env";
 import { HttpError } from "@/errors/httpError";
 import { createLogger } from "@/lib/logger";
 import { createCache } from "@/middleware/cache";
 import { errorHandler } from "@/middleware/errorHandler";
 import {
-  createInsightOpsAuthMiddleware,
-  requireInsightOpsAuth,
-} from "@/middleware/insightOpsAuth.middleware";
+  createAclaraAuthMiddleware,
+  requireAclaraAuth,
+} from "@/middleware/aclaraAuth.middleware";
 import { requestContextMiddleware } from "@/middleware/requestContext";
 import { createGraphRouter } from "@/routes/graph.routes";
 import { createProjectsRouter } from "@/routes/projects.routes";
@@ -44,7 +44,7 @@ app.use(express.json());
 app.use(requestContextMiddleware);
 
 const sessionStore = new SessionStore();
-const bundleRegistry = new InsightOpsBundleRegistry();
+const bundleRegistry = new AclaraBundleRegistry();
 
 const projectsCache = createCache<AzdoProject[]>(config.CACHE_TTL_GROUPS);
 const groupsCache = createCache<AzdoGroup[]>(config.CACHE_TTL_GROUPS);
@@ -75,7 +75,7 @@ const sharedBundleParams = {
   repoByIdCache,
 } as const;
 
-app.use(createInsightOpsAuthMiddleware(sessionStore));
+app.use(createAclaraAuthMiddleware(sessionStore));
 
 app.use(
   "/api/session",
@@ -87,15 +87,15 @@ app.use(
   })
 );
 
-function getBundle(req: Request): IInsightOpsBundle {
-  const auth = req.insightOpsAuth;
+function getBundle(req: Request): IAclaraBundle {
+  const auth = req.aclaraAuth;
   if (auth === undefined) {
     throw new HttpError("Unauthorized", 401);
   }
   let bundle = bundleRegistry.get(auth.sessionId);
   if (bundle === undefined) {
     if (auth.kind === "env") {
-      bundle = createInsightOpsBundle({
+      bundle = createAclaraBundle({
         org: auth.org,
         pat: auth.pat,
         ...sharedBundleParams,
@@ -112,7 +112,7 @@ function getBundle(req: Request): IInsightOpsBundle {
 }
 
 function getSessionId(req: Request): string {
-  const a = req.insightOpsAuth;
+  const a = req.aclaraAuth;
   if (a === undefined) {
     return "anonymous";
   }
@@ -120,7 +120,7 @@ function getSessionId(req: Request): string {
 }
 
 app.get("/api/health", (req: Request, res: Response) => {
-  const auth = req.insightOpsAuth;
+  const auth = req.aclaraAuth;
   res.json({
     status: "ok",
     org: auth !== undefined ? auth.org : null,
@@ -128,10 +128,10 @@ app.get("/api/health", (req: Request, res: Response) => {
   });
 });
 
-app.use("/api/projects", requireInsightOpsAuth, createProjectsRouter(getBundle));
+app.use("/api/projects", requireAclaraAuth, createProjectsRouter(getBundle));
 app.use(
   "/api/users",
-  requireInsightOpsAuth,
+  requireAclaraAuth,
   createUsersRouter({
     getBundle,
     getSessionId,
@@ -140,7 +140,7 @@ app.use(
 );
 app.use(
   "/api/repos",
-  requireInsightOpsAuth,
+  requireAclaraAuth,
   createReposRouter({
     getBundle,
     getSessionId,
@@ -149,14 +149,14 @@ app.use(
 );
 app.use(
   "/api/graph",
-  requireInsightOpsAuth,
+  requireAclaraAuth,
   createGraphRouter({
     getBundle,
     getSessionId,
     snapshotService,
   })
 );
-app.use("/api/trace", requireInsightOpsAuth, createTraceRouter(getBundle));
+app.use("/api/trace", requireAclaraAuth, createTraceRouter(getBundle));
 
 app.use(errorHandler);
 

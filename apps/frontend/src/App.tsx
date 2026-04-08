@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
-import { useSessionStatus } from "@/api/insightops.api";
+import { useSessionStatus } from "@/api/aclara.api";
 import { ConnectScreen } from "@/components/Connect/ConnectScreen";
 import { AppLoadingShell } from "@/components/Layout/AppLoadingShell";
 import { WorkspacePage } from "@/pages/WorkspacePage";

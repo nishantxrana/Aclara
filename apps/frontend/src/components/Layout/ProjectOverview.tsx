@@ -1,7 +1,7 @@
 import { AlertTriangle, GitBranch, Route, Users } from "lucide-react";
 import { useMemo } from "react";
 
-import { ApiHttpError, useGraph } from "@/api/insightops.api";
+import { ApiHttpError, useGraph } from "@/api/aclara.api";
 import { Button } from "@/components/ui/Button";
 import { useOverPrivilegedNodes } from "@/hooks/useOverPrivilegedNodes";
 import { uxEvent } from "@/lib/uxTelemetry";

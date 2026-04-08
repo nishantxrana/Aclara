@@ -14,7 +14,7 @@ function appendSetCookie(res: Response, cookie: string): void {
 }
 
 /**
- * Sets the InsightOps session id cookie (HttpOnly, SameSite=Lax).
+ * Sets the Aclara session id cookie (HttpOnly, SameSite=Lax).
  */
 export function setSessionCookie(res: Response, sessionId: string): void {
   const maxAge = config.SESSION_MAX_AGE_SECONDS;

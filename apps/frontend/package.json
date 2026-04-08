@@ -1,5 +1,5 @@
 {
-  "name": "@insightops/frontend",
+  "name": "@aclara/frontend",
   "version": "0.1.0",
   "type": "module",
   "scripts": {

@@ -3,7 +3,7 @@
  * Used only when the user opts in to "Remember on this device".
  */
 
-const STORAGE_KEY = "insightops.credential.v1";
+const STORAGE_KEY = "aclara.credential.v1";
 
 /** Satisfies `SubtleCrypto` BufferSource typing (avoids SharedArrayBuffer variance). */
 function asBufferSource(data: Uint8Array): BufferSource {

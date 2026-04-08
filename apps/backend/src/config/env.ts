@@ -32,7 +32,7 @@ const envSchema = z
     CACHE_TTL_USERS: numberWithDefault(300),
     CACHE_TTL_ACLS: numberWithDefault(120),
     SESSION_COOKIE_NAME: z.preprocess(
-      (v: unknown) => (v === undefined || v === "" ? "insightops_sid" : v),
+      (v: unknown) => (v === undefined || v === "" ? "aclara_sid" : v),
       z.string().min(1)
     ),
     SESSION_MAX_AGE_SECONDS: numberWithDefault(86_400),

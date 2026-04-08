@@ -1,5 +1,5 @@
 {
-  "name": "@insightops/backend",
+  "name": "@aclara/backend",
   "version": "0.1.0",
   "scripts": {
     "dev": "bun run --watch src/index.ts",

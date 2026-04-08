@@ -1,4 +1,4 @@
-# InsightOps Access Visualizer
+# Aclara Access Visualizer
 
 Full-stack TypeScript application that visualizes Azure DevOps identity, group membership, and Git repository permissions as an interactive graph. It helps teams answer who has access, why a user has access to a repo, and where elevated or risky permission patterns appear.
 
@@ -70,7 +70,7 @@ flowchart LR
 
 - **Express** HTTP API, **Zod**-validated configuration (`src/config/env.ts`).
 - **CORS** with `credentials: true` so the SPA can send session cookies; `CORS_ORIGIN` must match the browser origin in production.
-- **Authentication resolution** (`src/middleware/insightOpsAuth.middleware.ts`): valid session cookie first; if absent, optional `AZURE_DEVOPS_ORG` + `AZURE_DEVOPS_PAT` from the environment.
+- **Authentication resolution** (`src/middleware/aclaraAuth.middleware.ts`): valid session cookie first; if absent, optional `AZURE_DEVOPS_ORG` + `AZURE_DEVOPS_PAT` from the environment.
 - Azure DevOps access is centralized in the backend client layer (not ad-hoc HTTP from the browser).
 
 ### Frontend (`apps/frontend`)
@@ -163,7 +163,7 @@ The SPA uses `fetch` with `credentials: "include"` so the session cookie is sent
 | `PORT` | API port (default `3001`). |
 | `NODE_ENV` | `development` \| `production` \| `test`. |
 | `CORS_ORIGIN` | Browser origin allowed for credentialed CORS (default `http://localhost:5173`). **In production, set this to your deployed SPA origin exactly** (scheme + host + port). |
-| `SESSION_COOKIE_NAME` | Session cookie name (default `insightops_sid`). |
+| `SESSION_COOKIE_NAME` | Session cookie name (default `aclara_sid`). |
 | `SESSION_MAX_AGE_SECONDS` | Session lifetime (default `86400`). |
 | `CACHE_TTL_*` | In-memory cache TTLs for AzDO-backed data (seconds). |
 | `LOG_LEVEL` / `LOG_FORMAT` | Logging; defaults favor `DEBUG` + pretty in development, `INFO` + `json` in production. |

@@ -11,15 +11,15 @@ import type {
   TraceStep,
 } from "@/types/graph.types";
 
-/** Centralized React Query keys for InsightOps API resources. */
+/** Centralized React Query keys for Aclara API resources. */
 export const QUERY_KEYS = {
-  sessionStatus: ["insightops", "session", "status"] as const,
-  projects: ["insightops", "projects"] as const,
-  users: (projectName: string) => ["insightops", "users", projectName] as const,
-  repos: (projectName: string) => ["insightops", "repos", projectName] as const,
-  graph: (projectName: string) => ["insightops", "graph", projectName] as const,
+  sessionStatus: ["aclara", "session", "status"] as const,
+  projects: ["aclara", "projects"] as const,
+  users: (projectName: string) => ["aclara", "users", projectName] as const,
+  repos: (projectName: string) => ["aclara", "repos", projectName] as const,
+  graph: (projectName: string) => ["aclara", "graph", projectName] as const,
   trace: (projectName: string, userId: string, repoId: string) =>
-    ["insightops", "trace", projectName, userId, repoId] as const,
+    ["aclara", "trace", projectName, userId, repoId] as const,
 } as const;
 
 const SessionStatusSchema = z.discriminatedUnion("connected", [
@@ -186,16 +186,16 @@ export type ProjectSummary = z.infer<typeof ProjectDtoSchema>;
 export type UserSummary = z.infer<typeof UserDtoSchema>;
 export type RepoSummary = z.infer<typeof RepoDtoSchema>;
 
-export type InsightOpsApiErrorBody = {
+export type AclaraApiErrorBody = {
   message?: string;
   error?: string;
 };
 
-const apiLog = createLogger("insightops.api");
+const apiLog = createLogger("aclara.api");
 
 function errorMessageFromBody(json: unknown, fallback: string): string {
   if (typeof json === "object" && json !== null) {
-    const o = json as InsightOpsApiErrorBody;
+    const o = json as AclaraApiErrorBody;
     if (typeof o.message === "string" && o.message.length > 0) {
       return o.message;
     }
@@ -207,7 +207,7 @@ function errorMessageFromBody(json: unknown, fallback: string): string {
 }
 
 /**
- * Thrown when the InsightOps API returns a non-2xx response.
+ * Thrown when the Aclara API returns a non-2xx response.
  */
 export class ApiHttpError extends Error {
   public readonly requestId: string | undefined;
@@ -449,7 +449,7 @@ export function useProjects(): UseQueryResult<ProjectSummary[], Error> {
  */
 export function useUsers(projectName: string | null): UseQueryResult<UserSummary[], Error> {
   return useQuery({
-    queryKey: projectName !== null ? QUERY_KEYS.users(projectName) : ["insightops", "users", "none"],
+    queryKey: projectName !== null ? QUERY_KEYS.users(projectName) : ["aclara", "users", "none"],
     queryFn: () => {
       if (projectName === null) {
         throw new Error("useUsers: projectName is required");
@@ -466,7 +466,7 @@ export function useUsers(projectName: string | null): UseQueryResult<UserSummary
  */
 export function useRepos(projectName: string | null): UseQueryResult<RepoSummary[], Error> {
   return useQuery({
-    queryKey: projectName !== null ? QUERY_KEYS.repos(projectName) : ["insightops", "repos", "none"],
+    queryKey: projectName !== null ? QUERY_KEYS.repos(projectName) : ["aclara", "repos", "none"],
     queryFn: () => {
       if (projectName === null) {
         throw new Error("useRepos: projectName is required");
@@ -483,7 +483,7 @@ export function useRepos(projectName: string | null): UseQueryResult<RepoSummary
  */
 export function useGraph(projectName: string | null): UseQueryResult<AccessGraph, Error> {
   return useQuery({
-    queryKey: projectName !== null ? QUERY_KEYS.graph(projectName) : ["insightops", "graph", "none"],
+    queryKey: projectName !== null ? QUERY_KEYS.graph(projectName) : ["aclara", "graph", "none"],
     queryFn: () => {
       if (projectName === null) {
         throw new Error("useGraph: projectName is required");
@@ -508,7 +508,7 @@ export function useTrace(
     queryKey:
       enabled
         ? QUERY_KEYS.trace(projectName, userId, repoId)
-        : ["insightops", "trace", "none"],
+        : ["aclara", "trace", "none"],
     queryFn: () => {
       if (projectName === null || userId === null || repoId === null) {
         throw new Error("useTrace: projectName, userId, and repoId are required");

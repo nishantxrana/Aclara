@@ -1,8 +1,8 @@
 import { Router, type Request, type Response } from "express";
 import { z } from "zod";
 
-import { createInsightOpsBundle } from "@/composition/createInsightOpsBundle";
-import type { InsightOpsBundleRegistry } from "@/composition/insightOpsBundleRegistry";
+import { createAclaraBundle } from "@/composition/createAclaraBundle";
+import type { AclaraBundleRegistry } from "@/composition/aclaraBundleRegistry";
 import { config } from "@/config/env";
 import { HttpError } from "@/errors/httpError";
 import { asyncHandler } from "@/middleware/asyncHandler";
@@ -27,7 +27,7 @@ const ConnectBodySchema = z.object({
 
 export interface ISessionRoutesDeps {
   readonly sessionStore: SessionStore;
-  readonly bundleRegistry: InsightOpsBundleRegistry;
+  readonly bundleRegistry: AclaraBundleRegistry;
   readonly snapshotService: ProjectSnapshotService;
   readonly projectsCache: Cache<AzdoProject[]>;
   readonly groupsCache: Cache<AzdoGroup[]>;
@@ -46,7 +46,7 @@ export function createSessionRouter(deps: ISessionRoutesDeps): Router {
     "/connect",
     asyncHandler(async (req: Request, res: Response) => {
       const body = ConnectBodySchema.parse(req.body);
-      const bundle = createInsightOpsBundle({
+      const bundle = createAclaraBundle({
         org: body.org,
         pat: body.pat,
         projectsCache: deps.projectsCache,

@@ -1,16 +1,16 @@
 import { randomUUID } from "node:crypto";
 
-import type { InsightOpsSessionRecord } from "@/session/session.types";
+import type { AclaraSessionRecord } from "@/session/session.types";
 
 /**
  * In-memory session store. Suitable for single-process deployments (local tool / single instance).
  */
 export class SessionStore {
-  private readonly sessions = new Map<string, InsightOpsSessionRecord>();
+  private readonly sessions = new Map<string, AclaraSessionRecord>();
 
-  create(org: string, pat: string): InsightOpsSessionRecord {
+  create(org: string, pat: string): AclaraSessionRecord {
     const id = randomUUID();
-    const rec: InsightOpsSessionRecord = {
+    const rec: AclaraSessionRecord = {
       id,
       org,
       pat,
@@ -20,7 +20,7 @@ export class SessionStore {
     return rec;
   }
 
-  get(sessionId: string): InsightOpsSessionRecord | undefined {
+  get(sessionId: string): AclaraSessionRecord | undefined {
     return this.sessions.get(sessionId);
   }
 

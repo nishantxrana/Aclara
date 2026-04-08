@@ -1,19 +1,19 @@
 ---
-description: InsightOps Access Visualizer — project context, stack, and architecture. Always apply this rule.
+description: Aclara Access Visualizer — project context, stack, and architecture. Always apply this rule.
 globs:
 alwaysApply: true
 ---
 
-# InsightOps Access Visualizer — Project Context
+# Aclara Access Visualizer — Project Context
 
 ## What This Project Does
-InsightOps is a fullstack TypeScript tool that visualizes Azure DevOps access control.
+Aclara is a fullstack TypeScript tool that visualizes Azure DevOps access control.
 It fetches identity graphs, permission ACLs, and group memberships via Azure DevOps REST APIs,
 then renders them as an interactive node-graph so users can trace exactly WHY a user
 has (or does not have) access to a repository.
 
 ## Monorepo Structure
-insightops-access-visualizer/
+aclara-access-visualizer/
 ├── apps/
 │   ├── backend/   → Node.js + Express + TypeScript
 │   └── frontend/  → React 18 + TypeScript + Vite
