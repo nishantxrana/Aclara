@@ -32,3 +32,29 @@ Structured logs use `ux.*` events via `uxEvent()` in `apps/frontend/src/lib/uxTe
 
 - Complete a user + repo trace; hover and click trace steps; path nodes and edges emphasize; other edges fade.
 - Clear trace selection clears pinned/hover step highlights.
+- **Access trace panel**: with user + repo selected, confirm the **Summary** block updates and reads clearly; path steps show `presentationPermission` text (not raw comma dumps).
+
+## Canvas nodes & labels
+
+- Nodes show **primary** title + optional **secondary** line (email / principal / default branch); hover the card to see full tooltip including graph id.
+- **Users** blue accent, **groups** purple, **repos** teal (left border + type label colors).
+
+## Swim lanes & layout
+
+- Top **Users / Groups / Repositories** lane legend is visible; node columns align left → center → right for those types.
+- Dagre still orders vertically within each lane.
+
+## Edges
+
+- **Membership** edges: dashed gray, “Member of” label on hover or when trace path highlights that edge.
+- **Permission** edges: green allow, red deny, lighter green inherited, **amber** when `isElevated`; labels show on hover, trace path highlight, or when both user and repo are selected and the edge touches that repo.
+
+## Repo focus (summary / path modes)
+
+- Select a **repository** (without Advanced mode): identities not connected to that repo’s permission edges are strongly muted (~80% fade). **Advanced** mode disables that muting.
+- Selecting a **user** as well expands the highlighted set to membership ancestors and trace subjects.
+
+## Interaction
+
+- Nodes are not draggable; zoom limits ~0.12–2×; double-click does not zoom.
+- First graph load or filter change that changes node count refits the view (`fitView` with short duration where supported).

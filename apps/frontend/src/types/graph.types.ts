@@ -1,5 +1,7 @@
 export type NodeType = "user" | "group" | "repo";
 
+export type GraphEdgeKind = "membership" | "permission";
+
 export type PermissionLevel =
   | "allow"
   | "deny"
@@ -11,6 +13,8 @@ export interface GraphNode {
   id: string;
   type: NodeType;
   label: string;
+  primaryLabel: string;
+  secondaryLabel?: string;
   metadata: Record<string, unknown>;
   isOverPrivileged?: boolean;
 }
@@ -19,8 +23,12 @@ export interface GraphEdge {
   id: string;
   source: string;
   target: string;
+  kind: GraphEdgeKind;
   permission: string;
+  presentationLabel: string;
   level: PermissionLevel;
+  isElevated?: boolean;
+  isDirect?: boolean;
 }
 
 export interface AccessGraph {
@@ -37,6 +45,7 @@ export interface TraceStep {
   subjectLabel: string;
   viaGroup?: string;
   permission: string;
+  presentationPermission: string;
   level: PermissionLevel;
   reason: string;
 }

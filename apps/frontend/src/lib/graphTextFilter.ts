@@ -40,8 +40,11 @@ export function applyGraphTextAndRiskFilter(
     }
   } else {
     for (const n of nodes) {
+      const secondary = n.secondaryLabel?.toLowerCase() ?? "";
       if (
         n.label.toLowerCase().includes(filterLower) ||
+        n.primaryLabel.toLowerCase().includes(filterLower) ||
+        secondary.includes(filterLower) ||
         n.id.toLowerCase().includes(filterLower)
       ) {
         matchIds.add(n.id);

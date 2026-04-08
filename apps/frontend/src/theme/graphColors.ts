@@ -6,6 +6,12 @@ export const GRAPH_NODE_COLORS = {
   fallback: "#64748b",
 } as const;
 
+/** Membership edges — dashed gray on canvas. */
+export const MEMBERSHIP_EDGE_STROKE = "#64748b";
+
+/** Elevated / risky permission grants (solid amber). */
+export const ELEVATED_PERMISSION_EDGE_STROKE = "#f59e0b";
+
 /** Aligned with `tailwind.config.ts` `theme.extend.colors.status`. */
 export const PERMISSION_EDGE_STROKE: Record<string, string> = {
   allow: "#22c55e",

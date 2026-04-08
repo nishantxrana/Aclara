@@ -22,7 +22,7 @@ export function usersFromAccessGraph(graph: AccessGraph): Array<{
       const mailAddress = readOptionalString(meta, "mailAddress");
       return {
         id: n.id,
-        displayName: n.label,
+        displayName: n.primaryLabel ?? n.label,
         ...(principalName !== undefined ? { principalName } : {}),
         ...(mailAddress !== undefined ? { mailAddress } : {}),
       };
@@ -47,7 +47,7 @@ export function reposFromAccessGraph(graph: AccessGraph): Array<{
       const remoteUrl = readOptionalString(meta, "remoteUrl");
       return {
         id: repoId,
-        name: n.label,
+        name: n.primaryLabel ?? n.label,
         ...(defaultBranch !== undefined ? { defaultBranch } : {}),
         ...(remoteUrl !== undefined ? { remoteUrl } : {}),
       };

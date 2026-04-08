@@ -1,0 +1,674 @@
+{
+  "meta": {
+    "name": "InsightOps Visual Design Direction",
+    "version": "1.0.0",
+    "purpose": "High-level creative direction and design-system guidance derived from the provided reference screenshots. Use this file to instruct AI and designers to recreate the same visual language consistently across the app.",
+    "productContext": "Apply this style to the InsightOps Access Visualizer so graph exploration, panels, tables, forms, and dashboards all feel like one premium, modern, light SaaS workspace.",
+    "referenceStyleSummary": [
+      "Soft, premium enterprise SaaS",
+      "Light mode first",
+      "Airy, high-whitespace layouts",
+      "Rounded cards and panels",
+      "Thin neutral borders",
+      "Blue-led accent system with cyan and violet support",
+      "Quiet data-dense UI with clear hierarchy",
+      "Diagram and canvas surfaces that feel precise but friendly"
+    ]
+  },
+  "creativeDirection": {
+    "designEssence": "A calm, polished, collaborative analytics workspace that blends dashboard clarity with whiteboard flexibility.",
+    "tone": [
+      "clean",
+      "precise",
+      "optimistic",
+      "premium",
+      "lightweight",
+      "intelligent",
+      "approachable"
+    ],
+    "keywords": [
+      "soft enterprise",
+      "editorial spacing",
+      "floating panels",
+      "canvas-centric",
+      "subtle gradients",
+      "gentle contrast",
+      "high legibility",
+      "controlled color accents"
+    ],
+    "avoid": [
+      "heavy dark surfaces as the default expression",
+      "harsh black outlines",
+      "tight cramped layouts",
+      "excessive saturation across all elements",
+      "thick shadows",
+      "dense all-caps labeling",
+      "skeuomorphic depth",
+      "hard angular shapes"
+    ]
+  },
+  "designPrinciples": [
+    "Favor clarity over decoration, but make the interface feel premium through proportion, whitespace, and polish.",
+    "Treat each panel as a light floating sheet placed over a soft atmospheric background.",
+    "Use color for hierarchy and intent, not for constant ornamentation.",
+    "Make data visualizations look calm and readable before making them dramatic.",
+    "Preserve generous breathing room around controls even in data-dense contexts.",
+    "Use rounded geometry consistently so canvases, sidebars, cards, tooltips, and tables feel related.",
+    "Keep interaction cues subtle, crisp, and confident: soft shadows, thin borders, blue focus, violet selection.",
+    "Structure every screen as a composition of navigation, workspace, and contextual detail rather than a stack of unrelated widgets."
+  ],
+  "foundations": {
+    "structure": {
+      "pageModel": "Three-zone workspace composition: left navigation or asset rail, dominant central canvas or content zone, and right contextual inspector or summary panel.",
+      "surfaceStrategy": "Use a pale app background with slightly brighter elevated panels. Panels should read as floating layers separated mostly by border, radius, and shadow rather than heavy color changes.",
+      "density": "Medium density. Show a lot of information, but create calm through spacing, muted labels, and consistent alignment.",
+      "grid": "Use a disciplined 8px spacing system with frequent use of 16, 20, 24, and 32px gaps. The canvas area may include a faint dotted or micro-grid texture."
+    },
+    "spacing": {
+      "baseUnitPx": 8,
+      "scalePx": [4, 8, 12, 16, 20, 24, 32, 40, 48, 64],
+      "rules": [
+        "Use 24 to 32px outer page padding for desktop workspaces.",
+        "Use 16 to 24px internal padding inside cards and panels.",
+        "Use 8 to 12px vertical rhythm inside compact control groups.",
+        "Use 24px minimum separation between major screen regions.",
+        "Use tighter 12 to 16px spacing only in tables, list rows, and inspector control stacks."
+      ]
+    },
+    "cornerRadius": {
+      "philosophy": "Rounded, modern, and soft without becoming playful.",
+      "tokens": {
+        "xs": "8px",
+        "sm": "10px",
+        "md": "12px",
+        "lg": "16px",
+        "xl": "20px",
+        "pill": "999px"
+      },
+      "usage": [
+        "Use 16 to 20px for main panels and cards.",
+        "Use 10 to 12px for inputs, dropdowns, and small widgets.",
+        "Use pill radii for badges, chips, segmented controls, and compact status labels."
+      ]
+    },
+    "borders": {
+      "style": "Hairline or near-hairline borders in cool neutral tones.",
+      "default": "1px solid",
+      "visualGoal": "Borders should separate surfaces gently, never dominate them.",
+      "useCases": [
+        "panel outlines",
+        "table row dividers",
+        "input outlines",
+        "selected canvas group boundaries with accent color",
+        "subtle chart container framing"
+      ]
+    },
+    "shadows": {
+      "style": "Soft, broad, low-contrast shadows that suggest elevation without heaviness.",
+      "tokens": {
+        "sm": "0 6px 16px rgba(18, 36, 74, 0.06)",
+        "md": "0 12px 32px rgba(18, 36, 74, 0.08)",
+        "lg": "0 18px 48px rgba(18, 36, 74, 0.10)"
+      },
+      "guidance": [
+        "Most panels should use the small or medium shadow only.",
+        "Hover elevation should increase subtly, not jump dramatically.",
+        "Avoid stacking strong shadow and strong border on the same component."
+      ]
+    },
+    "backgrounds": {
+      "appBackground": "Use a soft cool gradient or large smooth color wash from pale sky blue to near-white.",
+      "canvasBackground": "Use white or near-white with a faint dotted or grid texture when a workspace needs spatial organization.",
+      "panelBackground": "Use clean white or a very lightly tinted white-blue surface.",
+      "accentWash": "Use low-opacity blue, cyan, or violet glow only for key selection states or hero moments."
+    }
+  },
+  "colorSystem": {
+    "philosophy": "The palette is led by crisp blue, supported by cyan for freshness and violet for selection and intelligence. Neutrals stay cool and quiet so data and interaction states stand out cleanly.",
+    "palette": {
+      "background": {
+        "page": "#EEF5FF",
+        "pageAlt": "#E8F2FF",
+        "canvas": "#FDFEFF",
+        "panel": "#FFFFFF",
+        "panelSubtle": "#F7FAFF",
+        "panelMuted": "#F3F7FC"
+      },
+      "text": {
+        "primary": "#0F172A",
+        "secondary": "#5B6B84",
+        "tertiary": "#8A97AB",
+        "inverse": "#FFFFFF"
+      },
+      "border": {
+        "soft": "#E6ECF5",
+        "default": "#D9E4F2",
+        "strong": "#C8D6E8"
+      },
+      "brand": {
+        "primary": "#3B82F6",
+        "primaryHover": "#2F6FE0",
+        "primarySoft": "#E8F1FF",
+        "secondary": "#52C7EA",
+        "secondarySoft": "#E7FAFF",
+        "selection": "#A855F7",
+        "selectionSoft": "#F4E9FF"
+      },
+      "data": {
+        "blue": "#3B82F6",
+        "cyan": "#44C2E6",
+        "violet": "#9B6BFF",
+        "teal": "#25C3B0",
+        "slate": "#91A4BC"
+      },
+      "status": {
+        "success": "#19B36B",
+        "successSoft": "#E9FBF2",
+        "warning": "#F59E0B",
+        "warningSoft": "#FFF5DD",
+        "danger": "#F05A67",
+        "dangerSoft": "#FFF0F2",
+        "info": "#4B8DFF",
+        "infoSoft": "#EAF2FF"
+      }
+    },
+    "usageRules": [
+      "Keep most surfaces white or near-white; color should live in charts, active controls, tags, and highlights.",
+      "Use blue as the primary action and navigation accent.",
+      "Use cyan to bring freshness to charts, progress, and auxiliary highlights.",
+      "Use violet for selection boxes, editor handles, advanced intelligence cues, or alternate data emphasis.",
+      "Use cool gray-blue neutrals instead of warm grays."
+    ]
+  },
+  "typography": {
+    "direction": "Use a modern neo-grotesk sans with an Inter or SF Pro-like feel: crisp, readable, and slightly compact.",
+    "fontFamily": {
+      "primary": "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "mono": "'SFMono-Regular', 'JetBrains Mono', ui-monospace, monospace"
+    },
+    "weights": {
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    },
+    "scale": {
+      "display": {
+        "size": "32-40px",
+        "weight": 700,
+        "tracking": "-0.03em"
+      },
+      "h1": {
+        "size": "24-28px",
+        "weight": 700,
+        "tracking": "-0.02em"
+      },
+      "h2": {
+        "size": "18-20px",
+        "weight": 600,
+        "tracking": "-0.01em"
+      },
+      "h3": {
+        "size": "15-16px",
+        "weight": 600,
+        "tracking": "-0.01em"
+      },
+      "body": {
+        "size": "14px",
+        "weight": 400,
+        "lineHeight": 1.5
+      },
+      "bodySmall": {
+        "size": "12-13px",
+        "weight": 400,
+        "lineHeight": 1.45
+      },
+      "label": {
+        "size": "11-12px",
+        "weight": 500,
+        "lineHeight": 1.3
+      }
+    },
+    "rules": [
+      "Use dark navy text instead of pure black.",
+      "Use semibold for section titles and active numeric emphasis.",
+      "Keep small labels quiet through lighter color rather than tiny size alone.",
+      "Avoid oversized headings inside working surfaces; the style is efficient, not marketing-heavy."
+    ]
+  },
+  "iconography": {
+    "style": "Simple outlined icons with clean 1.5px to 2px stroke weight.",
+    "shapeLanguage": "Rounded corners and minimal internal detail.",
+    "usage": [
+      "Default icon color should match secondary text.",
+      "Active icons can shift to brand blue.",
+      "Avoid heavy filled icons except for compact status dots or small badges."
+    ]
+  },
+  "motion": {
+    "personality": "Smooth and understated.",
+    "duration": {
+      "fast": "120ms",
+      "standard": "180ms",
+      "slow": "260ms"
+    },
+    "easing": {
+      "standard": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+      "emphasis": "cubic-bezier(0.16, 1, 0.3, 1)"
+    },
+    "guidance": [
+      "Use small fades, position shifts, and elevation changes.",
+      "Panel openings should feel like floating sheets appearing, not sliding drawers from off-screen unless the layout specifically calls for it.",
+      "Selection outlines and focus states should appear crisply and quickly."
+    ]
+  },
+  "layoutGuidelines": {
+    "appShell": {
+      "description": "A desktop-first product shell with a persistent left rail, a large central working area, and an optional right-side context panel.",
+      "visualDirection": [
+        "Use full-height rounded workspace containers inside a softly tinted page background.",
+        "Maintain visible separation between zones with whitespace rather than thick dividers.",
+        "Let the central canvas dominate the composition."
+      ]
+    },
+    "leftRail": {
+      "description": "Compact vertical navigation for global sections and utilities.",
+      "width": "56-72px when icon-only, 240-280px when expanded into a library or explorer panel.",
+      "style": [
+        "White surface",
+        "Thin border on the right",
+        "High vertical rhythm",
+        "Icon-first navigation with subtle active state"
+      ]
+    },
+    "centerWorkspace": {
+      "description": "The main place for charts, flow diagrams, graph exploration, or structured content.",
+      "style": [
+        "Brightest region on the page",
+        "May include dotted grid, chart area, or node graph",
+        "Should feel spacious and touchable",
+        "Use layered cards within the workspace sparingly"
+      ]
+    },
+    "rightContextPanel": {
+      "description": "Inspector, summary, or action panel that shows details of the current selection.",
+      "width": "300-360px",
+      "style": [
+        "White surface",
+        "Thin left border or shadow separation",
+        "Sections divided by spacing and micro-headings",
+        "Scrollable but visually calm"
+      ]
+    }
+  },
+  "componentSystem": {
+    "navigationRail": {
+      "role": "Global navigation and utility access.",
+      "look": "Slim, white, vertically centered icon buttons with restrained active blue state.",
+      "guidelines": [
+        "Default items are quiet with secondary text or icon color.",
+        "Active item gets a soft blue tint or stroke halo rather than a loud solid block.",
+        "Keep icons evenly spaced with generous vertical padding."
+      ]
+    },
+    "sidebarPanel": {
+      "role": "Asset browser, scenario list, or primary explorer.",
+      "look": "White panel with header, tabs, search, grouped lists, and compact item rows.",
+      "guidelines": [
+        "Use section labels in small uppercase-like visual weight without strong letter spacing.",
+        "Rows should feel compact but breathable.",
+        "Selected rows should use a blue outline or pale blue fill, not a dark fill."
+      ]
+    },
+    "topToolbar": {
+      "role": "Screen context, quick actions, filters, and status.",
+      "look": "Minimal horizontal toolbar with strong spacing, icon controls, and occasional primary CTA.",
+      "guidelines": [
+        "Use the toolbar to clarify the current workspace, not to create noise.",
+        "Cluster actions by purpose and separate clusters with whitespace rather than strong separators.",
+        "Primary actions can use solid blue buttons; secondary actions should remain ghost or outlined."
+      ]
+    },
+    "tabs": {
+      "role": "Switch between related views inside the same surface.",
+      "look": "Text-led tabs with soft active underline, blue text, or subtle pill highlight.",
+      "guidelines": [
+        "Inactive tabs are muted gray-blue.",
+        "Active tabs should feel crisp, not heavy.",
+        "Keep tab bars visually light with fine dividers or no container at all."
+      ]
+    },
+    "searchField": {
+      "role": "Quick filtering and lookup.",
+      "look": "Rounded input with pale background, subtle border, left icon, and low-noise placeholder.",
+      "guidelines": [
+        "Default fill may be slightly off-white to distinguish from the panel surface.",
+        "Focus state uses blue border and a faint blue glow.",
+        "Avoid dark placeholders or thick outlines."
+      ]
+    },
+    "buttons": {
+      "primary": {
+        "look": "Solid blue, medium radius, semibold label, compact height.",
+        "guidelines": [
+          "Use for the main next step or confirm action only.",
+          "Hover should darken slightly and lift subtly."
+        ]
+      },
+      "secondary": {
+        "look": "White or pale blue surface with soft border and blue or slate text.",
+        "guidelines": [
+          "Use when the action matters but should not dominate.",
+          "Can optionally use a tinted background instead of a hard outline."
+        ]
+      },
+      "ghost": {
+        "look": "No fill by default, text-led, often paired with an icon.",
+        "guidelines": [
+          "Use inside dense toolbars and contextual cards.",
+          "Hover state should introduce a pale background wash."
+        ]
+      },
+      "icon": {
+        "look": "Square or circular, lightly bordered or ghost, always compact.",
+        "guidelines": [
+          "Icon buttons should feel weightless and precise.",
+          "Active or toggled state can use pale blue or pale violet fill."
+        ]
+      }
+    },
+    "cards": {
+      "role": "Contain metrics, charts, summaries, or content groups.",
+      "look": "White floating surfaces with generous radius, 16 to 24px padding, and subtle shadow.",
+      "guidelines": [
+        "Prefer one main message per card.",
+        "Use muted labels and a darker key value.",
+        "Keep internal separators light and optional."
+      ]
+    },
+    "statCards": {
+      "role": "Show a headline metric with lightweight context.",
+      "look": "Large number, small supporting label, optional small delta or status chip.",
+      "guidelines": [
+        "Key number should be bold and dark.",
+        "Support metrics can use green for improvement, red for risk, or blue for activity.",
+        "Avoid loud backgrounds; let typography carry the emphasis."
+      ]
+    },
+    "chartCards": {
+      "role": "Display line, bar, and summary charts.",
+      "look": "Minimal chrome, lots of whitespace, muted axes, and smooth data strokes.",
+      "guidelines": [
+        "Use one dominant accent color and one or two supporting series at lower contrast.",
+        "Gridlines should be extremely light.",
+        "Tooltips should appear as dark navy or slate popovers with rounded corners and compact copy."
+      ]
+    },
+    "table": {
+      "role": "Show structured records with calm density.",
+      "look": "Compact white table with clear column rhythm, airy row heights, and faint dividers.",
+      "guidelines": [
+        "Headers use small semibold text in muted color.",
+        "Rows should highlight with a very soft blue or neutral tint on hover.",
+        "Status badges inside tables should remain understated and pill-shaped."
+      ]
+    },
+    "listItem": {
+      "role": "Represent a selectable entity in a sidebar or panel.",
+      "look": "Single-row or two-line item with icon or count meta and concise status detail.",
+      "guidelines": [
+        "Selected state uses outline or pale accent fill.",
+        "Numbers and metadata should align neatly to the right where possible.",
+        "Do not use heavy row separators for every item."
+      ]
+    },
+    "badgesAndChips": {
+      "role": "Express status, count, mode, or filter state.",
+      "look": "Pill shapes with soft tint backgrounds and semibold micro-labels.",
+      "guidelines": [
+        "Use tinted backgrounds, not saturated solids, for most chips.",
+        "Reserve bright solid fills for critical or primary states only.",
+        "Status dots may accompany labels to increase scan speed."
+      ]
+    },
+    "segmentedControl": {
+      "role": "Switch between small mutually exclusive modes like Day, Week, Month, Year.",
+      "look": "Rounded capsule or loose horizontal text group with a quiet active pill.",
+      "guidelines": [
+        "Keep the inactive segments visually light.",
+        "The active segment may be white on a pale container or pale blue on white."
+      ]
+    },
+    "forms": {
+      "role": "Data entry for connect, filters, configuration, and editing.",
+      "look": "Crisp, understated, and highly legible.",
+      "guidelines": [
+        "Labels sit close to fields and use small medium-weight text.",
+        "Inputs have 40 to 44px height, soft radius, and subtle border.",
+        "Use stacked form layouts with clear section spacing rather than overly compressed inline fields."
+      ]
+    },
+    "selectAndDropdown": {
+      "role": "Single-choice input and contextual menus.",
+      "look": "Rounded field or popover with soft border, white background, and compact row menu items.",
+      "guidelines": [
+        "Menu surfaces should match card styling with slightly stronger shadow.",
+        "Selected menu items can use pale blue fill or a small check mark.",
+        "Avoid overly dark or native-looking dropdown styling."
+      ]
+    },
+    "tooltip": {
+      "role": "Explain data points and controls.",
+      "look": "Small floating popover with dark navy or slate background, white text, rounded 10 to 12px corners, and a compact shadow.",
+      "guidelines": [
+        "Tooltips should feel precise and informative.",
+        "Use concise labels and short numeric summaries."
+      ]
+    },
+    "modalOrSheet": {
+      "role": "Focused decisions, onboarding, and configuration.",
+      "look": "Large white dialog or sheet with rounded corners, strong whitespace, and restrained actions.",
+      "guidelines": [
+        "Prefer calm, centered layouts with clear hierarchy.",
+        "Keep destructive actions visually separated from the primary positive path."
+      ]
+    },
+    "alertAndCallout": {
+      "role": "Highlight important issues, recommendations, or system signals.",
+      "look": "Soft tinted card with icon, concise title, small body text, and one or two clear actions.",
+      "guidelines": [
+        "Use danger, warning, info, or success tint backgrounds rather than hard red or yellow blocks.",
+        "Callouts should feel actionable, not alarming by default."
+      ]
+    },
+    "emptyState": {
+      "role": "Guide the user when a panel has no content yet.",
+      "look": "Centered or lightly aligned card with an icon, short title, one-sentence explanation, and optional CTA.",
+      "guidelines": [
+        "Keep the tone helpful and calm.",
+        "Use illustration sparingly; simple iconography is enough."
+      ]
+    },
+    "graphCanvas": {
+      "role": "Core exploration surface for InsightOps relationships and access paths.",
+      "look": "A bright canvas with faint grid texture, soft node cards, thin connectors, and vivid but controlled highlights.",
+      "guidelines": [
+        "Use white or very pale node surfaces with colored accents, not fully saturated node bodies.",
+        "Selected paths or node groups can use violet outlines, blue glow, or softly tinted overlays.",
+        "Keep connector lines clean, slightly rounded, and visually secondary to nodes and labels.",
+        "The canvas should feel like a premium process or topology editor, not a raw engineering diagram."
+      ]
+    },
+    "graphNode": {
+      "role": "Represent users, groups, repos, and permission entities.",
+      "look": "Compact rounded tiles or cards with icon, label, and lightweight metadata.",
+      "guidelines": [
+        "Differentiate node types through accent color, iconography, and small badges rather than completely different shapes.",
+        "Selected nodes get a stronger accent ring and subtle shadow lift.",
+        "Elevated or risky nodes may use a soft warning or danger accent while preserving the same geometry."
+      ]
+    },
+    "tracePanel": {
+      "role": "Explain why access exists through sequential evidence.",
+      "look": "Structured vertical panel with timeline-like steps, chips, and contextual metadata.",
+      "guidelines": [
+        "Each step should be framed as a neat card or list row with clear hierarchy.",
+        "The current step can use a pale blue highlight.",
+        "Use compact badges for allow, deny, inherited, or risk signals."
+      ]
+    },
+    "inspectorPanel": {
+      "role": "Show details, metadata, filters, and editable settings for the current selection.",
+      "look": "Right-aligned white panel with grouped sections, short labels, and editable rows.",
+      "guidelines": [
+        "Use section headers and 16 to 24px vertical spacing to prevent visual overload.",
+        "Make editable rows feel modular, almost like cards within the panel.",
+        "Keep actions close to the relevant content block."
+      ]
+    },
+    "projectOverview": {
+      "role": "Landing surface after project selection.",
+      "look": "A composed dashboard of summary cards, risk callouts, activity charts, and next-step entry points.",
+      "guidelines": [
+        "Start with concise project context and primary health or risk indicators.",
+        "Use cards to guide users into investigation flows.",
+        "The overview should feel analytical and calm rather than overloaded."
+      ]
+    },
+    "projectPicker": {
+      "role": "Help users choose projects efficiently.",
+      "look": "Light panel with search, recents, and list rows.",
+      "guidelines": [
+        "Selection should feel immediate and friendly.",
+        "Use strong readability and compact metadata for project descriptions or counts."
+      ]
+    },
+    "connectScreen": {
+      "role": "Credential entry and first-run entry point.",
+      "look": "Minimal centered or left-weighted form over the atmospheric page background.",
+      "guidelines": [
+        "Use one hero card, concise explanation, and only essential form fields.",
+        "Make security and privacy language clear but visually quiet.",
+        "Primary CTA should stand out; everything else should stay subdued."
+      ]
+    }
+  },
+  "dataVisualizationGuidelines": {
+    "charts": [
+      "Prefer smooth line charts and narrow bar charts with soft contrast.",
+      "Use extremely light gridlines and minimal axis ornamentation.",
+      "Highlight the active data point with a focused tooltip, small marker, or hover halo.",
+      "Use one dominant blue series and secondary slate or cyan series.",
+      "Reserve strong multicolor charts for comparisons that truly need it."
+    ],
+    "numbers": [
+      "Primary metrics should be bold and large, but still integrated into the product surface.",
+      "Always pair large numbers with a clear small label and optional change indicator.",
+      "Use green or red only for semantic change, not decorative contrast."
+    ],
+    "tables": [
+      "Keep rows clean, calm, and lightly separated.",
+      "Use status pills instead of raw colored text whenever possible.",
+      "Right-align numbers and dates when it improves scanability."
+    ]
+  },
+  "interactionPatterns": {
+    "selection": {
+      "style": "Use pale blue fill, subtle shadow lift, or violet outline box depending on context.",
+      "notes": [
+        "Canvas multi-select and bounding boxes can use violet dashed or solid outlines.",
+        "Single-item selection in lists and panels should stay softer and blue-led."
+      ]
+    },
+    "hover": {
+      "style": "Slight tint change, micro-elevation, or border emphasis.",
+      "notes": [
+        "Hover should reassure, not distract.",
+        "Do not rely on heavy scale transforms."
+      ]
+    },
+    "focus": {
+      "style": "Clearly visible blue ring or blue border with subtle outer glow.",
+      "notes": [
+        "Keyboard focus must remain highly legible on white surfaces."
+      ]
+    },
+    "dragAndDrop": {
+      "style": "Use soft placeholder areas, violet or blue outlines, and clear insertion feedback.",
+      "notes": [
+        "Drag states should feel controlled and premium, like a professional design or workflow tool."
+      ]
+    }
+  },
+  "contentStyle": {
+    "voice": "Concise, direct, and helpful.",
+    "rules": [
+      "Use short labels and action-oriented button copy.",
+      "Favor calm product language over hype.",
+      "Explain system intelligence in plain English.",
+      "Use concise metadata summaries rather than long explanatory paragraphs inside working panels."
+    ]
+  },
+  "screenRecipes": {
+    "workspaceScreen": {
+      "composition": [
+        "soft page background",
+        "rounded full-height app frame",
+        "left navigation or explorer",
+        "dominant center canvas or analysis area",
+        "right inspector or summary panel"
+      ],
+      "notes": [
+        "This should be the default frame for the main product experience.",
+        "The center area must remain visually dominant."
+      ]
+    },
+    "overviewDashboard": {
+      "composition": [
+        "header context strip",
+        "top row of summary cards",
+        "middle analytical cards or risk insights",
+        "lower table or activity section"
+      ],
+      "notes": [
+        "Use more white space than a typical admin dashboard.",
+        "Keep the number of competing accent colors low."
+      ]
+    },
+    "investigationScreen": {
+      "composition": [
+        "filter or mode controls near the top",
+        "large graph canvas in the center",
+        "supporting lists on the left",
+        "trace or node details on the right"
+      ],
+      "notes": [
+        "The graph should feel like a premium canvas tool rather than a generic chart."
+      ]
+    }
+  },
+  "aiReplicationGuide": {
+    "masterPrompt": "Design a premium light-mode enterprise SaaS interface with a soft sky-blue atmospheric background, white floating panels, rounded 16-20px corners, thin cool-gray borders, subtle shadows, blue as the primary accent, cyan as a fresh secondary accent, and violet reserved for selection and intelligent highlights. Use a three-zone composition with a left rail, dominant central canvas, and right inspector panel. Keep the interface airy, highly legible, and data-dense without feeling cramped.",
+    "do": [
+      "Use lots of whitespace and calm panel separation.",
+      "Prefer white panels over tinted blocks.",
+      "Use compact but elegant typography with strong numeric emphasis.",
+      "Keep charts and graph canvases minimal and clean.",
+      "Use blue focus states and violet selection states.",
+      "Preserve a premium collaboration-tool feel."
+    ],
+    "dont": [
+      "Do not make the UI look like a dark developer console.",
+      "Do not use thick borders, hard black text, or loud saturation everywhere.",
+      "Do not overfill the canvas with visual noise.",
+      "Do not use generic bootstrap-like controls.",
+      "Do not make cards overly flat or overly glossy."
+    ],
+    "translationForThisApp": [
+      "Project selection should feel like a polished workspace picker, not a raw list.",
+      "Graph exploration should resemble a modern workflow editor with subtle grid texture.",
+      "Trace and inspector panels should feel like structured analyst tools with premium spacing.",
+      "Risk signals should be visible but not panic-inducing."
+    ]
+  }
+}

@@ -3,12 +3,19 @@ import type { Edge, Node } from "@xyflow/react";
 
 import type { NodeType } from "@/types/graph.types";
 
-const DEFAULT_SIZE = { width: 200, height: 56 };
+const DEFAULT_SIZE = { width: 200, height: 72 };
 
 const SIZES: Record<NodeType, { width: number; height: number }> = {
-  user: { width: 176, height: 52 },
-  group: { width: 200, height: 52 },
-  repo: { width: 228, height: 56 },
+  user: { width: 200, height: 72 },
+  group: { width: 220, height: 72 },
+  repo: { width: 248, height: 76 },
+};
+
+/** Graph-space X center per swim lane (users → groups → repos). Dagre supplies Y only. */
+const LANE_CENTER_X: Record<NodeType, number> = {
+  user: 160,
+  group: 480,
+  repo: 820,
 };
 
 function sizeForNode(node: Node): { width: number; height: number } {
@@ -54,10 +61,15 @@ export function layoutWithDagreLR(nodes: Node[], edges: Edge[]): Node[] {
       return { ...node, position: { x: 0, y: 0 } };
     }
     const { width, height } = sizeForNode(node);
+    const rawType = node.type;
+    const laneCenterX =
+      rawType === "user" || rawType === "group" || rawType === "repo"
+        ? LANE_CENTER_X[rawType]
+        : withPosition.x;
     return {
       ...node,
       position: {
-        x: withPosition.x - width / 2,
+        x: laneCenterX - width / 2,
         y: withPosition.y - height / 2,
       },
     };

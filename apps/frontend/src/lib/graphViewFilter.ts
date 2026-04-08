@@ -1,5 +1,7 @@
 import type { AccessGraph, AccessTrace } from "@/types/graph.types";
 
+import { isMembershipEdge } from "@/lib/graphEdgeKind";
+
 /** Summary = permission landscape without pure membership edges. Path = user/repo/trace slice. Advanced = full graph. */
 export type GraphViewMode = "summary" | "path" | "advanced";
 
@@ -25,7 +27,7 @@ function collectInducedSubgraph(
 /**
  * Expands `seed` along `memberOf` edges (child source → parent target) up to `maxDepth`.
  */
-function expandMemberOfAncestors(
+export function expandMemberOfAncestors(
   graph: AccessGraph,
   seed: string,
   maxDepth: number
@@ -36,7 +38,7 @@ function expandMemberOfAncestors(
     const next: string[] = [];
     for (const id of frontier) {
       for (const e of graph.edges) {
-        if (e.permission === "memberOf" && e.source === id && !reached.has(e.target)) {
+        if (isMembershipEdge(e) && e.source === id && !reached.has(e.target)) {
           reached.add(e.target);
           next.push(e.target);
         }
@@ -64,7 +66,7 @@ export function filterGraphForViewMode(
   }
 
   if (mode === "summary") {
-    const permEdges = graph.edges.filter((e) => e.permission !== "memberOf");
+    const permEdges = graph.edges.filter((e) => !isMembershipEdge(e));
     const nodeIds = new Set<string>();
     for (const e of permEdges) {
       nodeIds.add(e.source);
@@ -96,11 +98,57 @@ export function filterGraphForViewMode(
   if (opts.selectedRepoId !== null) {
     const repoNid = repoNodeId(opts.selectedRepoId);
     for (const e of graph.edges) {
-      if (e.target === repoNid && e.permission !== "memberOf") {
+      if (e.target === repoNid && !isMembershipEdge(e)) {
         ids.add(e.source);
       }
     }
   }
 
   return collectInducedSubgraph(graph, ids);
+}
+
+/**
+ * When a repository is selected, returns node ids that should be visually muted (~80% dim)
+ * because they are not part of the repo’s permission picture or the current user/trace context.
+ * Empty set when no repository is selected (no extra muting).
+ */
+export function computeFocusMutedNodeIds(
+  graph: AccessGraph,
+  selectedRepoId: string | null,
+  selectedUserId: string | null,
+  trace: AccessTrace | undefined
+): Set<string> {
+  if (selectedRepoId === null) {
+    return new Set();
+  }
+  const relevant = new Set<string>();
+  const repoNid = repoNodeId(selectedRepoId);
+  relevant.add(repoNid);
+
+  for (const e of graph.edges) {
+    if (e.target === repoNid && !isMembershipEdge(e)) {
+      relevant.add(e.source);
+    }
+  }
+
+  if (selectedUserId !== null) {
+    relevant.add(selectedUserId);
+    expandMemberOfAncestors(graph, selectedUserId, 10).forEach((id) => {
+      relevant.add(id);
+    });
+  }
+
+  if (trace !== undefined) {
+    for (const s of trace.steps) {
+      relevant.add(s.subjectId);
+    }
+  }
+
+  const muted = new Set<string>();
+  for (const n of graph.nodes) {
+    if (!relevant.has(n.id)) {
+      muted.add(n.id);
+    }
+  }
+  return muted;
 }

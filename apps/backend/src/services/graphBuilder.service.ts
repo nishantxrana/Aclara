@@ -51,6 +51,63 @@ function permissionSummary(decoded: DecodedAcePermissions): string {
   return parts.length > 0 ? parts.join(", ") : "none";
 }
 
+/** Short label for edges and trace timeline (not raw comma dumps). */
+function presentationLabelForPermission(decoded: DecodedAcePermissions): string {
+  if (decoded.explicitDenyNames.length > 0) {
+    return `Deny: ${decoded.explicitDenyNames.join(", ")}`;
+  }
+  if (decoded.explicitAllowNames.length > 0) {
+    if (decoded.isOverPrivileged) {
+      return `Elevated allow: ${decoded.explicitAllowNames.join(", ")}`;
+    }
+    return `Allow: ${decoded.explicitAllowNames.join(", ")}`;
+  }
+  if (decoded.effectiveAllowNames.length > 0) {
+    return `Inherited: ${decoded.effectiveAllowNames.join(", ")}`;
+  }
+  return "No effective permission";
+}
+
+function secondaryLabelForIdentity(
+  maps: IdentityResolutionMaps,
+  graphId: string,
+  primaryLabel: string
+): string | undefined {
+  const entry = maps.index.get(graphId);
+  if (entry === undefined) {
+    return undefined;
+  }
+  const mail = entry.identity.mailAddress;
+  const pn = entry.identity.principalName;
+  if (mail !== undefined && mail.length > 0 && mail !== primaryLabel) {
+    return mail;
+  }
+  if (pn !== undefined && pn.length > 0 && pn !== primaryLabel) {
+    return pn;
+  }
+  return undefined;
+}
+
+function buildIdentityMetadata(
+  maps: IdentityResolutionMaps,
+  graphId: string,
+  base: Record<string, unknown>
+): Record<string, unknown> {
+  const entry = maps.index.get(graphId);
+  if (entry === undefined) {
+    return base;
+  }
+  const idn = entry.identity;
+  const out: Record<string, unknown> = { ...base };
+  if (idn.principalName !== undefined && idn.principalName.length > 0) {
+    out["principalName"] = idn.principalName;
+  }
+  if (idn.mailAddress !== undefined && idn.mailAddress.length > 0) {
+    out["mailAddress"] = idn.mailAddress;
+  }
+  return out;
+}
+
 function nodeIdForMaps(maps: IdentityResolutionMaps, legacyOrGraphDescriptor: string): string {
   const direct = maps.index.get(legacyOrGraphDescriptor);
   if (direct !== undefined) {
@@ -220,10 +277,17 @@ export class GraphBuilderService {
     };
 
     for (const repo of repos) {
+      const primary = repo.name;
+      const secondary =
+        repo.defaultBranch !== undefined && repo.defaultBranch.length > 0
+          ? repo.defaultBranch
+          : undefined;
       addNode({
         id: repoNodeId(repo.id),
         type: "repo",
-        label: repo.name,
+        label: primary,
+        primaryLabel: primary,
+        ...(secondary !== undefined ? { secondaryLabel: secondary } : {}),
         metadata: {
           ...(repo.remoteUrl !== undefined && repo.remoteUrl.length > 0
             ? { remoteUrl: repo.remoteUrl }
@@ -255,17 +319,20 @@ export class GraphBuilderService {
         const decoded = this.securityService.decodeAce(ace, gitNs.actions);
         const graphId = nodeIdForMaps(maps, ace.descriptor);
         const nodeType = classifyNodeType(graphId, groupSubjects, userSubjects);
-        const label = labelForGraphId(maps, graphId, ace.descriptor);
+        const primary = labelForGraphId(maps, graphId, ace.descriptor);
+        const secondary = secondaryLabelForIdentity(maps, graphId, primary);
 
         const node: GraphNode = {
           id: graphId,
           type: nodeType,
-          label,
-          metadata: {
+          label: primary,
+          primaryLabel: primary,
+          ...(secondary !== undefined ? { secondaryLabel: secondary } : {}),
+          metadata: buildIdentityMetadata(maps, graphId, {
             legacyDescriptor: ace.descriptor,
             explicitDenyNames: decoded.explicitDenyNames,
             explicitAllowNames: decoded.explicitAllowNames,
-          },
+          }),
         };
         if (decoded.isOverPrivileged) {
           node.isOverPrivileged = true;
@@ -276,13 +343,18 @@ export class GraphBuilderService {
 
         const level = permissionEdgeLevel(decoded);
         const permission = permissionSummary(decoded);
+        const presentationLabel = presentationLabelForPermission(decoded);
         edgeSeq += 1;
         edges.push({
           id: `perm-${String(edgeSeq)}`,
           source: graphId,
           target: repoNodeId(repoIdFromToken),
+          kind: "permission",
           permission,
+          presentationLabel,
           level,
+          ...(decoded.isOverPrivileged ? { isElevated: true } : {}),
+          ...(nodeType === "user" ? { isDirect: true } : {}),
         });
       }
     }
@@ -327,18 +399,24 @@ export class GraphBuilderService {
           continue;
         }
         for (const containerId of containers) {
+          const gPrimary = labelForGraphId(maps, containerId, containerId);
+          const gSecondary = secondaryLabelForIdentity(maps, containerId, gPrimary);
           addNode({
             id: containerId,
             type: "group",
-            label: labelForGraphId(maps, containerId, containerId),
-            metadata: { kind: "group" },
+            label: gPrimary,
+            primaryLabel: gPrimary,
+            ...(gSecondary !== undefined ? { secondaryLabel: gSecondary } : {}),
+            metadata: buildIdentityMetadata(maps, containerId, { kind: "group" }),
           });
           edgeSeq += 1;
           edges.push({
             id: `mem-${String(edgeSeq)}`,
             source: memberId,
             target: containerId,
+            kind: "membership",
             permission: "memberOf",
+            presentationLabel: "Member of",
             level: "not-set",
           });
           subjectsNeedingMembership.add(containerId);
@@ -355,18 +433,25 @@ export class GraphBuilderService {
         }
         const parents = await this.graphService.fetchMembershipsUp(groupApiSubject);
         for (const m of parents) {
+          const cid = m.containerDescriptor;
+          const pPrimary = labelForGraphId(maps, cid, cid);
+          const pSecondary = secondaryLabelForIdentity(maps, cid, pPrimary);
           addNode({
-            id: m.containerDescriptor,
+            id: cid,
             type: "group",
-            label: labelForGraphId(maps, m.containerDescriptor, m.containerDescriptor),
-            metadata: { kind: "group" },
+            label: pPrimary,
+            primaryLabel: pPrimary,
+            ...(pSecondary !== undefined ? { secondaryLabel: pSecondary } : {}),
+            metadata: buildIdentityMetadata(maps, cid, { kind: "group" }),
           });
           edgeSeq += 1;
           edges.push({
             id: `gmem-${String(edgeSeq)}`,
             source: groupId,
-            target: m.containerDescriptor,
+            target: cid,
+            kind: "membership",
             permission: "memberOf",
+            presentationLabel: "Member of",
             level: "not-set",
           });
         }
@@ -458,15 +543,19 @@ export class GraphBuilderService {
 
       const decoded = this.securityService.decodeAce(ace, gitNs.actions);
       const subjectType: "user" | "group" = appliesDirectly ? "user" : "group";
+      const subjectLabel = labelForGraphId(maps, graphId, ace.descriptor);
+      const viaGroup = appliesViaGroup && !appliesDirectly ? subjectLabel : undefined;
       steps.push({
         subjectId: graphId,
         subjectType,
-        subjectLabel: labelForGraphId(maps, graphId, ace.descriptor),
+        subjectLabel,
+        ...(viaGroup !== undefined ? { viaGroup } : {}),
         permission: permissionSummary(decoded),
+        presentationPermission: presentationLabelForPermission(decoded),
         level: permissionEdgeLevel(decoded),
         reason: appliesDirectly
-          ? "ACE applies directly to the user"
-          : "ACE applies via group membership",
+          ? "This Git permission ACE is assigned directly to the user on this repository."
+          : `This ACE applies to group "${subjectLabel}"; the selected user is included via group membership (up to transitive depth).`,
       });
     }
 

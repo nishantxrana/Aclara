@@ -27,10 +27,11 @@ export const TraceStep = memo(function TraceStep({
   onPointerLeave,
 }: ITraceStepProps): JSX.Element {
   const dotTitle = permissionLevelDescription(step.level);
-  const viaLine =
-    step.viaGroup !== undefined && step.viaGroup.length > 0
-      ? `Via group: ${step.viaGroup}`
-      : null;
+  const showViaGroup =
+    step.viaGroup !== undefined &&
+    step.viaGroup.length > 0 &&
+    step.viaGroup !== step.subjectLabel;
+  const viaLine = showViaGroup ? `Via group: ${step.viaGroup}` : null;
 
   let rowClass =
     "relative flex w-full gap-3 rounded-md pb-6 pl-0 pr-1 text-left transition-colors last:pb-0 ";
@@ -78,7 +79,7 @@ export const TraceStep = memo(function TraceStep({
           <p className="text-xs text-slate-400">{viaLine}</p>
         ) : null}
         <p className="text-xs text-slate-300">
-          <span className="font-medium text-slate-200">{step.permission}</span>
+          <span className="font-medium text-slate-200">{step.presentationPermission}</span>
           <span className="mx-1.5 text-slate-600">·</span>
           <span className="text-slate-400">{step.reason}</span>
         </p>

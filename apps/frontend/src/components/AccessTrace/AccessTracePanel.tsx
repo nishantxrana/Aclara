@@ -10,6 +10,7 @@ import {
   type RepoSummary,
   type UserSummary,
 } from "@/api/insightops.api";
+import type { AccessTrace } from "@/types/graph.types";
 import { useVisualizerStore } from "@/stores/visualizer.store";
 
 import { uxEvent } from "@/lib/uxTelemetry";
@@ -276,6 +277,18 @@ export function AccessTracePanel(): JSX.Element {
 
         {hasPair && traceQuery.isSuccess ? (
           <div className="flex flex-col gap-4 p-4">
+            <div
+              className="rounded-md border border-surface-light bg-surface/60 px-3 py-2 text-xs text-slate-300"
+              role="status"
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                Summary
+              </p>
+              <p className="mt-1 leading-relaxed text-slate-300">
+                {traceNarrativeSummary(traceQuery.data)}
+              </p>
+            </div>
+
             {!traceQuery.data.hasAccess ? (
               <div
                 className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100"
@@ -372,6 +385,23 @@ function summarizeUser(
     title: u.displayName,
     ...(sub !== undefined && sub.length > 0 ? { subtitle: sub } : {}),
   };
+}
+
+function traceNarrativeSummary(trace: AccessTrace): string {
+  if (!trace.hasAccess) {
+    if (trace.deniedPermissions.length > 0) {
+      const sample = trace.deniedPermissions.slice(0, 4).join(", ");
+      const suffix = trace.deniedPermissions.length > 4 ? "…" : "";
+      return `No effective access for this pair. Deny bits are set on the repository ACL (${sample}${suffix}), which can override inherited allows.`;
+    }
+    return "No effective Git access for this user on the selected repository under the current ACLs and group memberships.";
+  }
+  if (trace.effectivePermissions.length === 0) {
+    return "Access is granted (read/contribute or other effective bits), but no named permission labels were resolved from the Git namespace.";
+  }
+  const sample = trace.effectivePermissions.slice(0, 5).join(", ");
+  const suffix = trace.effectivePermissions.length > 5 ? "…" : "";
+  return `Why access exists: combined ACEs on this repo yield effective permissions including ${sample}${suffix}. Use the path below to see which identities and groups contributed.`;
 }
 
 function summarizeRepo(

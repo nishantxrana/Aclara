@@ -17,18 +17,26 @@ import { useShallow } from "zustand/react/shallow";
 
 import { useGraph, useTrace } from "@/api/insightops.api";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import { filterGraphForViewMode } from "@/lib/graphViewFilter";
+import {
+  computeFocusMutedNodeIds,
+  filterGraphForViewMode,
+} from "@/lib/graphViewFilter";
 import { createLogger } from "@/utils/logger";
-import type { AccessGraph, AccessTrace, NodeType } from "@/types/graph.types";
-import { useVisualizerStore, type GraphTextFilterMode } from "@/stores/visualizer.store";
-import { applyGraphTextAndRiskFilter } from "@/lib/graphTextFilter";
+import { useVisualizerStore } from "@/stores/visualizer.store";
 import { layoutWithDagreLR } from "@/utils/dagreLayout";
 import { GRAPH_NODE_COLORS } from "@/theme/graphColors";
 import { isGraphNodeSelected, repoIdFromNodeId } from "@/utils/graphIds";
 
+import {
+  buildCanvasElements,
+  patchNodeVisualState,
+  pathHighlightNodeIds,
+} from "./graphPresentation";
 import { GroupNode } from "./GroupNode";
+import { MembershipEdge } from "./MembershipEdge";
 import { PermissionEdge } from "./PermissionEdge";
 import { RepoNode } from "./RepoNode";
+import { SwimLaneLegend } from "./SwimLaneLegend";
 import { UserNode } from "./UserNode";
 
 const nodeTypes: NodeTypes = {
@@ -39,133 +47,10 @@ const nodeTypes: NodeTypes = {
 
 const edgeTypes: EdgeTypes = {
   permission: PermissionEdge,
+  membership: MembershipEdge,
 };
 
-const defaultEdgeOptions = { type: "permission" as const };
-
 const canvasLog = createLogger("GraphCanvas");
-
-function pathHighlightNodeIds(
-  trace: AccessTrace | undefined,
-  stepIndex: number | null,
-  selectedUserId: string | null,
-  selectedRepoId: string | null
-): Set<string> {
-  const s = new Set<string>();
-  if (selectedUserId !== null) {
-    s.add(selectedUserId);
-  }
-  if (selectedRepoId !== null) {
-    s.add(`repo:${selectedRepoId}`);
-  }
-  if (trace !== undefined && stepIndex !== null && stepIndex >= 0) {
-    for (let i = 0; i <= stepIndex; i += 1) {
-      const st = trace.steps[i];
-      if (st !== undefined) {
-        s.add(st.subjectId);
-      }
-    }
-  }
-  return s;
-}
-
-function toBaseFlowElements(
-  graph: AccessGraph,
-  filterLower: string,
-  textMode: GraphTextFilterMode,
-  onlyOverPrivileged: boolean,
-  pathHighlightIds: Set<string>,
-  traceStepHighlightActive: boolean,
-  inspectorNodeId: string | null,
-  inspectorNodeType: "user" | "group" | "repo" | null
-): {
-  nodes: Node[];
-  edges: Edge[];
-  dimIds: Set<string>;
-  layoutNodeCount: number;
-} {
-  const { nodes: gn, edges: ge, dimIds } = applyGraphTextAndRiskFilter(
-    graph,
-    filterLower,
-    textMode,
-    onlyOverPrivileged
-  );
-
-  const nodes: Node[] = gn.map((n) => ({
-    id: n.id,
-    type: n.type,
-    position: { x: 0, y: 0 },
-    data: {
-      label: n.label,
-      isOverPrivileged: n.isOverPrivileged === true,
-      selected: false,
-      dimmed: false,
-      inspectorActive:
-        inspectorNodeId !== null &&
-        inspectorNodeId === n.id &&
-        inspectorNodeType === n.type,
-      pathHighlight:
-        traceStepHighlightActive &&
-        pathHighlightIds.size > 0 &&
-        pathHighlightIds.has(n.id),
-    },
-  }));
-
-  const edges: Edge[] = ge.map((e) => {
-    const pathHighlighted =
-      traceStepHighlightActive &&
-      pathHighlightIds.size > 0 &&
-      pathHighlightIds.has(e.source) &&
-      pathHighlightIds.has(e.target);
-    return {
-      id: e.id,
-      source: e.source,
-      target: e.target,
-      type: "permission",
-      data: {
-        level: e.level,
-        permission: e.permission,
-        pathHighlighted,
-        traceFocusActive: traceStepHighlightActive,
-      },
-    };
-  });
-
-  return { nodes, edges, dimIds, layoutNodeCount: gn.length };
-}
-
-function patchNodeVisualState(
-  node: Node,
-  selectedUserId: string | null,
-  selectedRepoId: string | null,
-  hoveredNodeId: string | null,
-  dimIds: Set<string>
-): Node {
-  const nt = node.type;
-  if (nt !== "user" && nt !== "group" && nt !== "repo") {
-    return node;
-  }
-  const typed = nt as NodeType;
-  const selected = isGraphNodeSelected(
-    node.id,
-    typed,
-    selectedUserId,
-    selectedRepoId
-  );
-  const data = node.data as Record<string, unknown>;
-  const filterDim = dimIds.has(node.id);
-  const hoverDim = hoveredNodeId !== null && hoveredNodeId !== node.id && !selected;
-  const dimmed = filterDim || hoverDim;
-
-  return {
-    ...node,
-    data: {
-      ...data,
-      selected,
-      dimmed,
-    },
-  };
-}
 
 function GraphCanvasInner(): JSX.Element {
   const { fitView, setViewport, getViewport } = useReactFlow();
@@ -241,9 +126,28 @@ function GraphCanvasInner(): JSX.Element {
 
   const traceStepHighlightActive = effectiveTraceStepIndex !== null;
 
+  const focusMutedIds = useMemo(() => {
+    if (viewGraph === undefined || graphViewMode === "advanced") {
+      return new Set<string>();
+    }
+    return computeFocusMutedNodeIds(
+      viewGraph,
+      selectedRepoId,
+      selectedUserId,
+      traceQuery.data
+    );
+  }, [
+    viewGraph,
+    graphViewMode,
+    selectedRepoId,
+    selectedUserId,
+    traceQuery.data,
+  ]);
+
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const dimIdsRef = useRef<Set<string>>(new Set());
+  const focusMutedIdsRef = useRef<Set<string>>(new Set());
   const lastViewportKeyRef = useRef<string>("");
 
   useEffect(() => {
@@ -251,8 +155,10 @@ function GraphCanvasInner(): JSX.Element {
       return;
     }
 
+    focusMutedIdsRef.current = focusMutedIds;
+
     const { nodes: baseNodes, edges: baseEdges, dimIds, layoutNodeCount } =
-      toBaseFlowElements(
+      buildCanvasElements(
         viewGraph,
         filterLower,
         graphTextFilterMode,
@@ -286,7 +192,9 @@ function GraphCanvasInner(): JSX.Element {
           ui.selectedUserId,
           ui.selectedRepoId,
           ui.hoveredNodeId,
-          dimIds
+          dimIds,
+          focusMutedIds,
+          isGraphNodeSelected
         )
       )
     );
@@ -296,7 +204,7 @@ function GraphCanvasInner(): JSX.Element {
     const raf = requestAnimationFrame(() => {
       if (lastViewportKeyRef.current !== vpKey) {
         lastViewportKeyRef.current = vpKey;
-        void fitView({ padding: 0.2 });
+        void fitView({ padding: 0.2, duration: 200 });
         return;
       }
       if (selectedProjectName !== null) {
@@ -324,6 +232,7 @@ function GraphCanvasInner(): JSX.Element {
     inspectorNodeId,
     inspectorNodeType,
     selectedProjectName,
+    focusMutedIds,
     setNodes,
     setEdges,
     fitView,
@@ -336,11 +245,20 @@ function GraphCanvasInner(): JSX.Element {
         return prev;
       }
       const dimIds = dimIdsRef.current;
+      const muted = focusMutedIdsRef.current;
       return prev.map((n) =>
-        patchNodeVisualState(n, selectedUserId, selectedRepoId, hoveredNodeId, dimIds)
+        patchNodeVisualState(
+          n,
+          selectedUserId,
+          selectedRepoId,
+          hoveredNodeId,
+          dimIds,
+          muted,
+          isGraphNodeSelected
+        )
       );
     });
-  }, [selectedUserId, selectedRepoId, hoveredNodeId, setNodes]);
+  }, [selectedUserId, selectedRepoId, hoveredNodeId, focusMutedIds, setNodes]);
 
   const onMoveEnd = useCallback(() => {
     if (selectedProjectName === null) {
@@ -448,12 +366,15 @@ function GraphCanvasInner(): JSX.Element {
   return (
     <div className="relative min-h-0 flex-1 bg-surface">
       <ReactFlow
-        defaultEdgeOptions={defaultEdgeOptions}
         edges={edges}
         edgeTypes={edgeTypes}
         fitView={false}
+        maxZoom={2}
+        minZoom={0.12}
         nodes={nodes}
         nodeTypes={nodeTypes}
+        nodesConnectable={false}
+        nodesDraggable={false}
         onEdgeMouseEnter={onEdgeMouseEnter}
         onEdgeMouseLeave={onEdgeMouseLeave}
         onEdgesChange={onEdgesChange}
@@ -463,7 +384,9 @@ function GraphCanvasInner(): JSX.Element {
         onNodeMouseLeave={onNodeMouseLeave}
         onNodesChange={onNodesChange}
         proOptions={{ hideAttribution: true }}
+        zoomOnDoubleClick={false}
       >
+        <SwimLaneLegend />
         <Background color="#3f3f5a" gap={20} />
         <Controls className="!bg-surface-light !border-surface-light !shadow-lg [&_button]:!fill-slate-200" />
         <MiniMap

@@ -44,7 +44,7 @@ function summarizeGraph(graph: AccessGraph): Omit<IOverPrivilegedNodesResult, "d
     const row: IFlaggedEntity = {
       id: n.id,
       type: n.type,
-      label: n.label,
+      label: n.primaryLabel ?? n.label,
       elevatedSummary,
     };
     if (n.type === "user") {

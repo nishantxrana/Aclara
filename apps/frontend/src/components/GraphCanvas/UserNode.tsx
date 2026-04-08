@@ -1,16 +1,10 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { memo } from "react";
 
-export interface IUserNodeData {
-  label: string;
-  isOverPrivileged: boolean;
-  selected: boolean;
-  dimmed: boolean;
-  inspectorActive?: boolean;
-  pathHighlight?: boolean;
-}
+import type { ICanvasNodeData } from "./graphPresentation";
+import { graphNodeOpacityClass } from "./graphNodeVisual";
 
-function borderClassForNode(data: IUserNodeData): string {
+function borderClassForNode(data: ICanvasNodeData): string {
   if (data.selected) {
     return "ring-2 ring-primary ring-offset-2 ring-offset-surface";
   }
@@ -24,38 +18,39 @@ function borderClassForNode(data: IUserNodeData): string {
 }
 
 function UserNodeComponent(props: NodeProps): JSX.Element {
-  const data = props.data as unknown as IUserNodeData;
+  const data = props.data as unknown as ICanvasNodeData;
   const borderClass = borderClassForNode(data);
   const privilegeClass = data.isOverPrivileged
     ? "shadow-[0_0_0_1px_theme(colors.amber.500)]"
     : "";
-  const dimClass = data.dimmed ? "opacity-40" : "";
+  const opacityClass = graphNodeOpacityClass(data);
 
   return (
     <div
-      className={`rounded-lg bg-surface-light px-3 py-2 text-left transition-opacity ${borderClass} ${privilegeClass} ${dimClass}`}
+      className={`rounded-lg border-l-4 border-l-node-user bg-surface-light/90 pl-2 pr-3 py-2 text-left transition-opacity ${borderClass} ${privilegeClass} ${opacityClass}`}
+      title={data.title}
     >
       <Handle
         className="!h-2 !w-2 !border-0 !bg-node-user"
         position={Position.Left}
         type="target"
       />
-      <div className="flex items-center gap-2">
-        <span
-          className="h-2 w-2 shrink-0 rounded-full bg-node-user"
-          aria-hidden
-        />
-        <div className="min-w-0">
-          <p className="truncate text-xs font-medium uppercase tracking-wide text-slate-400">
+      <div className="flex items-start gap-2">
+        <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-node-user" aria-hidden />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-blue-300/90">
             User
           </p>
-          <p className="truncate text-sm text-slate-100">{data.label}</p>
+          <p className="truncate text-sm font-medium text-slate-100">{data.primaryLabel}</p>
+          {data.secondaryLabel !== undefined && data.secondaryLabel.length > 0 ? (
+            <p className="truncate text-xs text-slate-500" title={data.secondaryLabel}>
+              {data.secondaryLabel}
+            </p>
+          ) : null}
         </div>
       </div>
       {data.isOverPrivileged ? (
-        <p className="mt-1 text-[10px] font-medium uppercase text-amber-400">
-          Elevated
-        </p>
+        <p className="mt-1 text-[10px] font-medium uppercase text-amber-400">Elevated</p>
       ) : null}
       <Handle
         className="!h-2 !w-2 !border-0 !bg-node-user"

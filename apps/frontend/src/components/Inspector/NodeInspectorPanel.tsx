@@ -61,8 +61,11 @@ export function NodeInspectorPanel(): JSX.Element | null {
       <div className="flex items-start justify-between gap-2 border-b border-surface-light px-3 py-2">
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase text-slate-500">{inspectorNodeType}</p>
-          <p className="truncate text-sm font-medium text-slate-100" title={node.label}>
-            {node.label}
+          <p
+            className="truncate text-sm font-medium text-slate-100"
+            title={node.primaryLabel ?? node.label}
+          >
+            {node.primaryLabel ?? node.label}
           </p>
         </div>
         <button

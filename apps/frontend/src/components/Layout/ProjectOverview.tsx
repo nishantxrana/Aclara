@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { ApiHttpError, useGraph } from "@/api/insightops.api";
 import { useOverPrivilegedNodes } from "@/hooks/useOverPrivilegedNodes";
 import { uxEvent } from "@/lib/uxTelemetry";
+import { isMembershipEdge } from "@/lib/graphEdgeKind";
 import type { AccessGraph } from "@/types/graph.types";
 import { useVisualizerStore } from "@/stores/visualizer.store";
 
@@ -24,7 +25,7 @@ function topReposByPermissionEdgeCount(
 ): { label: string; count: number }[] {
   const counts = new Map<string, number>();
   for (const e of graph.edges) {
-    if (e.permission === "memberOf") {
+    if (isMembershipEdge(e)) {
       continue;
     }
     if (!e.target.startsWith("repo:")) {
@@ -37,7 +38,7 @@ function topReposByPermissionEdgeCount(
     .sort((a, b) => b[1] - a[1])
     .slice(0, limit)
     .map(([id, count]) => ({
-      label: repoNodeById.get(id)?.label ?? id,
+      label: repoNodeById.get(id)?.primaryLabel ?? repoNodeById.get(id)?.label ?? id,
       count,
     }));
 }

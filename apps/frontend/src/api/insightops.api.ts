@@ -6,6 +6,7 @@ import { createLogger } from "@/utils/logger";
 import type {
   AccessGraph,
   AccessTrace,
+  GraphEdge,
   GraphNode,
   TraceStep,
 } from "@/types/graph.types";
@@ -75,10 +76,14 @@ const PermissionLevelSchema = z.enum([
   "not-set",
 ]);
 
+const GraphEdgeKindSchema = z.enum(["membership", "permission"]);
+
 const GraphNodeSchema = z.object({
   id: z.string(),
   type: z.enum(["user", "group", "repo"]),
   label: z.string(),
+  primaryLabel: z.string().optional(),
+  secondaryLabel: z.string().optional(),
   metadata: z.record(z.unknown()),
   isOverPrivileged: z.boolean().optional(),
 });
@@ -87,8 +92,12 @@ const GraphEdgeSchema = z.object({
   id: z.string(),
   source: z.string(),
   target: z.string(),
+  kind: GraphEdgeKindSchema.optional(),
   permission: z.string(),
+  presentationLabel: z.string().optional(),
   level: PermissionLevelSchema,
+  isElevated: z.boolean().optional(),
+  isDirect: z.boolean().optional(),
 });
 
 const AccessGraphSchema = z.object({
@@ -105,6 +114,7 @@ const TraceStepSchema = z.object({
   subjectLabel: z.string(),
   viaGroup: z.string().optional(),
   permission: z.string(),
+  presentationPermission: z.string().optional(),
   level: PermissionLevelSchema,
   reason: z.string(),
 });
@@ -119,19 +129,44 @@ const AccessTraceSchema = z.object({
 });
 
 type ParsedGraphNode = z.infer<typeof GraphNodeSchema>;
+type ParsedGraphEdge = z.infer<typeof GraphEdgeSchema>;
 type ParsedTraceStep = z.infer<typeof TraceStepSchema>;
 
 function normalizeGraphNode(n: ParsedGraphNode): GraphNode {
+  const primaryLabel = n.primaryLabel ?? n.label;
   const base: GraphNode = {
     id: n.id,
     type: n.type,
-    label: n.label,
+    label: primaryLabel,
+    primaryLabel,
     metadata: n.metadata,
+    ...(n.secondaryLabel !== undefined && n.secondaryLabel.length > 0
+      ? { secondaryLabel: n.secondaryLabel }
+      : {}),
   };
   if (n.isOverPrivileged === true) {
     return { ...base, isOverPrivileged: true };
   }
   return base;
+}
+
+function normalizeGraphEdge(e: ParsedGraphEdge): GraphEdge {
+  const kind =
+    e.kind ??
+    (e.permission === "memberOf" ? ("membership" as const) : ("permission" as const));
+  const presentationLabel =
+    e.presentationLabel ?? (kind === "membership" ? "Member of" : e.permission);
+  return {
+    id: e.id,
+    source: e.source,
+    target: e.target,
+    kind,
+    permission: e.permission,
+    presentationLabel,
+    level: e.level,
+    ...(e.isElevated === true ? { isElevated: true } : {}),
+    ...(e.isDirect === true ? { isDirect: true } : {}),
+  };
 }
 
 function normalizeTraceStep(s: ParsedTraceStep): TraceStep {
@@ -140,6 +175,7 @@ function normalizeTraceStep(s: ParsedTraceStep): TraceStep {
     subjectType: s.subjectType,
     subjectLabel: s.subjectLabel,
     permission: s.permission,
+    presentationPermission: s.presentationPermission ?? s.permission,
     level: s.level,
     reason: s.reason,
     ...(s.viaGroup !== undefined ? { viaGroup: s.viaGroup } : {}),
@@ -300,6 +336,7 @@ export async function fetchGraph(
   return {
     ...parsed,
     nodes: parsed.nodes.map(normalizeGraphNode),
+    edges: parsed.edges.map(normalizeGraphEdge),
   };
 }
 
