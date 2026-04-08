@@ -157,17 +157,17 @@ export function ProjectPicker(props: ProjectPickerProps): JSX.Element {
 
   if (props.isLoading) {
     return (
-      <div className={`${widthClass} h-10 animate-pulse rounded-md bg-surface-light`} aria-busy="true" />
+      <div className={`${widthClass} h-10 animate-pulse rounded-input bg-panel-muted`} aria-busy="true" />
     );
   }
 
   if (props.error !== null) {
     return (
       <div className={`flex flex-wrap items-center gap-2 ${widthClass}`}>
-        <p className="text-sm text-red-400">{props.error.message}</p>
+        <p className="text-sm text-status-danger">{props.error.message}</p>
         {props.onRetry !== undefined ? (
           <button
-            className="rounded border border-surface-light px-2 py-1 text-xs text-slate-300 hover:bg-surface-light/40"
+            className="rounded-input border border-line-default bg-panel px-2 py-1 text-xs text-ink-primary hover:bg-panel-subtle"
             onClick={props.onRetry}
             type="button"
           >
@@ -188,16 +188,16 @@ export function ProjectPicker(props: ProjectPickerProps): JSX.Element {
   return (
     <div className={`relative ${widthClass}`} ref={containerRef}>
       {props.orgLabel !== undefined && props.orgLabel.length > 0 ? (
-        <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-slate-500">
-          Org: <span className="text-slate-400">{props.orgLabel}</span>
+        <p className="mb-1 text-label uppercase tracking-wide text-ink-tertiary">
+          Org: <span className="text-ink-secondary">{props.orgLabel}</span>
         </p>
       ) : null}
       <div
-        className={`flex items-center gap-1 rounded-md border border-surface-light bg-surface ${
+        className={`flex items-center gap-1 rounded-input border border-line-default bg-panel shadow-panel transition-colors focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/15 ${
           props.variant === "hero" ? "px-3 py-2.5" : "px-2 py-1.5"
         }`}
       >
-        <Search aria-hidden className="h-4 w-4 shrink-0 text-slate-500" />
+        <Search aria-hidden className="h-4 w-4 shrink-0 text-ink-tertiary" />
         <label className="sr-only" htmlFor={`${listboxId}-input`}>
           Project
         </label>
@@ -206,7 +206,7 @@ export function ProjectPicker(props: ProjectPickerProps): JSX.Element {
           aria-autocomplete="list"
           aria-controls={listboxId}
           aria-expanded={open}
-          className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
+          className="min-w-0 flex-1 bg-transparent text-sm text-ink-primary placeholder:text-ink-tertiary focus:outline-none"
           id={`${listboxId}-input`}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -230,7 +230,7 @@ export function ProjectPicker(props: ProjectPickerProps): JSX.Element {
         <button
           aria-expanded={open}
           aria-label={open ? "Close project list" : "Open project list"}
-          className="shrink-0 rounded p-1 text-slate-400 hover:bg-surface-light hover:text-slate-200"
+          className="shrink-0 rounded-input p-1 text-ink-tertiary hover:bg-panel-muted hover:text-ink-primary"
           onClick={() => {
             setOpen((v) => !v);
             if (!open) {
@@ -245,17 +245,17 @@ export function ProjectPicker(props: ProjectPickerProps): JSX.Element {
 
       {open ? (
         <ul
-          className="project-picker-scrollbar absolute left-0 right-0 z-50 mt-1 max-h-64 overflow-auto rounded-md border border-surface-light bg-surface py-1 shadow-lg"
+          className="project-picker-scrollbar absolute left-0 right-0 z-50 mt-1 max-h-64 overflow-auto rounded-input border border-line-default bg-panel py-1 shadow-panel-md"
           id={listboxId}
           role="listbox"
         >
           {displayRows.showRecent ? (
-            <li className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500" role="presentation">
+            <li className="px-3 py-1 text-label font-semibold uppercase tracking-wide text-ink-tertiary" role="presentation">
               Recent
             </li>
           ) : null}
           {flatOptions.length === 0 ? (
-            <li className="px-3 py-2 text-xs text-slate-500" role="presentation">
+            <li className="px-3 py-2 text-xs text-ink-tertiary" role="presentation">
               No projects match.
             </li>
           ) : (
@@ -266,7 +266,9 @@ export function ProjectPicker(props: ProjectPickerProps): JSX.Element {
                 <li
                   aria-selected={isSelected}
                   className={`cursor-pointer px-3 py-2 text-sm ${
-                    isActive ? "bg-primary/20 text-slate-50" : "text-slate-200 hover:bg-surface-light/60"
+                    isActive
+                      ? "bg-brand-primary/12 text-ink-primary"
+                      : "text-ink-primary hover:bg-brand-soft"
                   }`}
                   id={`${listboxId}-opt-${String(i)}`}
                   key={p.id}
@@ -282,19 +284,19 @@ export function ProjectPicker(props: ProjectPickerProps): JSX.Element {
                   role="option"
                 >
                   <span className="font-medium">{p.name}</span>
-                  <span className="ml-2 text-xs text-slate-500">{p.state}</span>
+                  <span className="ml-2 text-xs text-ink-tertiary">{p.state}</span>
                   {isSelected ? (
-                    <span className="ml-2 text-xs text-primary">✓</span>
+                    <span className="ml-2 text-xs text-brand-primary">✓</span>
                   ) : null}
                 </li>
               );
             })
           )}
           {normalize(search).length > 0 ? (
-            <li className="border-t border-surface-light" role="presentation">
+            <li className="border-t border-line-soft" role="presentation">
               <button
                 aria-label="Clear search"
-                className="w-full px-3 py-2 text-left text-xs text-slate-500 hover:bg-surface-light/40"
+                className="w-full px-3 py-2 text-left text-xs text-ink-tertiary hover:bg-panel-muted"
                 onMouseDown={(e) => {
                   e.preventDefault();
                 }}

@@ -7,26 +7,20 @@ import { memo } from "react";
 function SwimLaneLegendComponent(): JSX.Element {
   return (
     <Panel
-      className="pointer-events-none !m-2 flex w-[min(720px,92vw)] max-w-none justify-between gap-4 rounded-md border border-surface-light/80 bg-surface/85 px-4 py-2 shadow-md backdrop-blur-sm"
+      className="pointer-events-none !m-2 flex w-[min(720px,92vw)] max-w-none justify-between gap-4 rounded-md border border-line-default bg-panel/95 px-4 py-2 shadow-panel-md backdrop-blur-sm"
       position="top-center"
     >
       <div className="flex min-w-0 flex-1 flex-col items-center text-center">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
-          Users
-        </span>
-        <span className="text-[9px] text-slate-500">Identities</span>
+        <span className="text-label font-bold uppercase tracking-wider text-node-user">Users</span>
+        <span className="text-[9px] text-ink-tertiary">Identities</span>
       </div>
       <div className="flex min-w-0 flex-1 flex-col items-center text-center">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-violet-400">
-          Groups
-        </span>
-        <span className="text-[9px] text-slate-500">Membership</span>
+        <span className="text-label font-bold uppercase tracking-wider text-node-group">Groups</span>
+        <span className="text-[9px] text-ink-tertiary">Membership</span>
       </div>
       <div className="flex min-w-0 flex-1 flex-col items-center text-center">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-          Repositories
-        </span>
-        <span className="text-[9px] text-slate-500">Git ACLs</span>
+        <span className="text-label font-bold uppercase tracking-wider text-node-repo">Repositories</span>
+        <span className="text-[9px] text-ink-tertiary">Git ACLs</span>
       </div>
     </Panel>
   );

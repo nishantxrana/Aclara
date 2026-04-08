@@ -1,5 +1,6 @@
 import { ChevronRight } from "lucide-react";
 
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { useVisualizerStore } from "@/stores/visualizer.store";
 
 /**
@@ -17,43 +18,26 @@ export function ProjectContextStrip(): JSX.Element | null {
   return (
     <div
       aria-label="Workspace context"
-      className="flex flex-wrap items-center justify-between gap-2 border-b border-surface-light bg-surface-light/25 px-4 py-2"
+      className="flex flex-wrap items-center justify-between gap-2 border-b border-line-soft bg-panel-subtle/80 px-4 py-2"
     >
-      <div className="flex min-w-0 flex-wrap items-center gap-1 text-xs text-slate-400">
-        <span className="font-medium text-slate-500">Workspace</span>
+      <div className="flex min-w-0 flex-wrap items-center gap-1 text-xs text-ink-secondary">
+        <span className="font-medium text-ink-tertiary">Workspace</span>
         <ChevronRight className="h-3 w-3 shrink-0 opacity-50" aria-hidden />
-        <span className="truncate text-slate-200" title={selectedProjectName}>
+        <span className="truncate text-ink-primary" title={selectedProjectName}>
           {selectedProjectName}
         </span>
       </div>
-      <div className="flex rounded-md border border-surface-light p-0.5">
-        <button
-          className={`rounded px-2 py-1 text-xs font-medium ${
-            workspaceView === "overview"
-              ? "bg-primary/20 text-primary"
-              : "text-slate-400 hover:text-slate-200"
-          }`}
-          onClick={() => {
-            setWorkspaceView("overview");
-          }}
-          type="button"
-        >
-          Overview
-        </button>
-        <button
-          className={`rounded px-2 py-1 text-xs font-medium ${
-            workspaceView === "investigate"
-              ? "bg-primary/20 text-primary"
-              : "text-slate-400 hover:text-slate-200"
-          }`}
-          onClick={() => {
-            setWorkspaceView("investigate");
-          }}
-          type="button"
-        >
-          Investigate
-        </button>
-      </div>
+      <SegmentedControl
+        ariaLabel="Workspace view"
+        onChange={(id) => {
+          setWorkspaceView(id);
+        }}
+        options={[
+          { id: "overview", label: "Overview" },
+          { id: "investigate", label: "Investigate" },
+        ]}
+        value={workspaceView}
+      />
     </div>
   );
 }

@@ -22,19 +22,19 @@ export function permissionLevelDescription(level: PermissionLevel): string {
   }
 }
 
-/** Timeline dot ring + fill (Tailwind classes). */
+/** Timeline dot ring + fill (Tailwind classes) — light surfaces. */
 export function timelineDotClassForLevel(level: PermissionLevel): string {
   switch (level) {
     case "allow":
-      return "border-status-allow bg-status-allow/30";
+      return "border-status-allow bg-status-success-soft";
     case "deny":
-      return "border-status-deny bg-status-deny/30";
+      return "border-status-deny bg-status-danger-soft";
     case "inherited-allow":
-      return "border-slate-400 bg-slate-500/25";
+      return "border-line-strong bg-panel-muted";
     case "inherited-deny":
-      return "border-amber-500/80 bg-amber-500/20";
+      return "border-status-warning bg-status-warning-soft";
     case "not-set":
-      return "border-slate-600 bg-slate-700/40";
+      return "border-line-default bg-panel-subtle";
     default: {
       const _exhaustive: never = level;
       return _exhaustive;
@@ -46,15 +46,15 @@ export function timelineDotClassForLevel(level: PermissionLevel): string {
 export function chipClassForLevel(level: PermissionLevel): string {
   switch (level) {
     case "allow":
-      return "border-status-allow/40 bg-status-allow/15 text-emerald-200";
+      return "border-status-success/40 bg-status-success-soft text-emerald-800";
     case "deny":
-      return "border-status-deny/40 bg-status-deny/15 text-red-200";
+      return "border-status-danger/40 bg-status-danger-soft text-red-800";
     case "inherited-allow":
-      return "border-slate-500/50 bg-slate-600/30 text-slate-200";
+      return "border-line-default bg-panel-muted text-ink-secondary";
     case "inherited-deny":
-      return "border-amber-500/40 bg-amber-500/10 text-amber-200";
+      return "border-status-warning/45 bg-status-warning-soft text-amber-900";
     case "not-set":
-      return "border-slate-600 bg-slate-700/50 text-slate-400";
+      return "border-line-default bg-panel-subtle text-ink-tertiary";
     default: {
       const _exhaustive: never = level;
       return _exhaustive;

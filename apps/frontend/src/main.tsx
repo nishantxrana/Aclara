@@ -30,8 +30,6 @@ const queryClient = new QueryClient({
   }),
 });
 
-document.documentElement.classList.add("dark");
-
 const rootEl = document.getElementById("root");
 if (rootEl === null) {
   throw new Error('Root element with id "root" not found');

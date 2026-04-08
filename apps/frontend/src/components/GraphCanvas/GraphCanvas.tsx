@@ -24,6 +24,7 @@ import {
 import { createLogger } from "@/utils/logger";
 import { useVisualizerStore } from "@/stores/visualizer.store";
 import { layoutWithDagreLR } from "@/utils/dagreLayout";
+import { colors } from "@/theme/designTokens";
 import { GRAPH_NODE_COLORS } from "@/theme/graphColors";
 import { isGraphNodeSelected, repoIdFromNodeId } from "@/utils/graphIds";
 
@@ -315,7 +316,7 @@ function GraphCanvasInner(): JSX.Element {
 
   if (selectedProjectName === null) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-surface px-6 text-center text-slate-400">
+      <div className="flex flex-1 items-center justify-center bg-canvas px-6 text-center text-ink-secondary">
         <p className="max-w-sm text-sm">Select a project in the header to load the access graph.</p>
       </div>
     );
@@ -323,19 +324,19 @@ function GraphCanvasInner(): JSX.Element {
 
   if (graphQuery.isPending) {
     return (
-      <div className="flex flex-1 flex-col gap-3 bg-surface p-6">
-        <div className="h-4 w-48 animate-pulse rounded bg-surface-light" />
-        <div className="flex flex-1 animate-pulse rounded-lg bg-surface-light/60" />
+      <div className="flex flex-1 flex-col gap-3 bg-canvas p-6">
+        <div className="h-4 w-48 animate-pulse rounded bg-panel-muted" />
+        <div className="flex flex-1 animate-pulse rounded-lg bg-panel-subtle" />
       </div>
     );
   }
 
   if (graphQuery.isError) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-surface px-6 text-center">
+      <div className="flex flex-1 items-center justify-center bg-canvas px-6 text-center">
         <div>
-          <p className="text-sm font-medium text-red-400">Could not load graph</p>
-          <p className="mt-1 text-xs text-slate-500">{graphQuery.error.message}</p>
+          <p className="text-sm font-medium text-status-danger">Could not load graph</p>
+          <p className="mt-1 text-xs text-ink-tertiary">{graphQuery.error.message}</p>
         </div>
       </div>
     );
@@ -343,12 +344,12 @@ function GraphCanvasInner(): JSX.Element {
 
   if (nodes.length === 0) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-surface px-6 text-center text-slate-400">
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-canvas px-6 text-center text-ink-secondary">
         <p className="max-w-sm text-sm">
           No nodes match the current filters, or the graph is empty for this view.
         </p>
         <button
-          className="rounded-md border border-surface-light px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-surface-light/40"
+          className="rounded-input border border-line-default bg-panel px-3 py-1.5 text-xs font-medium text-ink-primary shadow-panel hover:bg-panel-subtle"
           onClick={() => {
             setFilterText("");
             if (showOnlyOverPrivileged) {
@@ -364,7 +365,7 @@ function GraphCanvasInner(): JSX.Element {
   }
 
   return (
-    <div className="relative min-h-0 flex-1 bg-surface">
+    <div className="relative min-h-0 flex-1 bg-canvas">
       <ReactFlow
         edges={edges}
         edgeTypes={edgeTypes}
@@ -387,11 +388,11 @@ function GraphCanvasInner(): JSX.Element {
         zoomOnDoubleClick={false}
       >
         <SwimLaneLegend />
-        <Background color="#3f3f5a" gap={20} />
-        <Controls className="!bg-surface-light !border-surface-light !shadow-lg [&_button]:!fill-slate-200" />
+        <Background color={colors.graph.gridDot} gap={20} />
+        <Controls className="!border-line-default !bg-panel !shadow-panel-md [&_button]:!fill-ink-secondary" />
         <MiniMap
-          className="!rounded-md !border !border-surface-light !bg-surface-light/90 hidden lg:block"
-          maskColor="rgb(30, 30, 46, 0.65)"
+          className="!rounded-md !border !border-line-default !bg-panel/95 hidden lg:block"
+          maskColor="rgba(15, 23, 42, 0.12)"
           nodeColor={(n) => {
             if (n.type === "user") {
               return GRAPH_NODE_COLORS.user;

@@ -10,9 +10,9 @@ import { Sidebar } from "@/components/Sidebar/Sidebar";
  */
 export function AppShell(): JSX.Element {
   return (
-    <div className="flex min-h-0 flex-1">
+    <div className="flex min-h-0 flex-1 border-t border-line-soft bg-page">
       <Sidebar />
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-canvas shadow-panel-md">
         <FilterBar />
         <OverPrivilegeBanner />
         <GraphCanvas />

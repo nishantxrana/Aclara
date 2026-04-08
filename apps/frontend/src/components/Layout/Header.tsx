@@ -9,6 +9,7 @@ import {
   useProjects,
   useSessionStatus,
 } from "@/api/insightops.api";
+import { Button } from "@/components/ui/Button";
 import { uxEvent } from "@/lib/uxTelemetry";
 import { useVisualizerStore } from "@/stores/visualizer.store";
 
@@ -121,16 +122,16 @@ export function Header(props: { readonly layout?: HeaderLayout }): JSX.Element {
     sessionQuery.data?.connected === true ? sessionQuery.data.org : undefined;
 
   return (
-    <header className="flex shrink-0 flex-wrap items-center gap-4 border-b border-surface-light bg-surface-light/40 px-4 py-3">
+    <header className="flex shrink-0 flex-wrap items-center gap-4 border-b border-line-soft bg-panel px-4 py-3 shadow-panel">
       <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-lg font-semibold tracking-tight text-primary">InsightOps</span>
+        <span className="text-lg font-semibold tracking-tight text-brand-primary">InsightOps</span>
         {connectionLabel !== null ? (
-          <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
+          <span className="text-label uppercase tracking-wide text-ink-tertiary">
             {connectionLabel}
           </span>
         ) : null}
         {orgLabel !== undefined ? (
-          <span className="truncate text-[10px] text-slate-500" title={orgLabel}>
+          <span className="truncate text-label text-ink-tertiary" title={orgLabel}>
             {orgLabel}
           </span>
         ) : null}
@@ -154,16 +155,16 @@ export function Header(props: { readonly layout?: HeaderLayout }): JSX.Element {
           />
 
           {selectedProjectName !== null ? (
-            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+            <div className="flex flex-wrap items-center gap-3 text-xs text-ink-secondary">
               <span>
                 Nodes:{" "}
-                <span className="font-medium text-slate-300">
+                <span className="font-medium text-ink-primary">
                   {nodeCount === null ? "…" : String(nodeCount)}
                 </span>
               </span>
               <span className="hidden sm:inline">
                 Last sync:{" "}
-                <span className="font-medium text-slate-300">
+                <span className="font-medium text-ink-primary">
                   {formatSyncedAt(graphData?.generatedAt)}
                 </span>
               </span>
@@ -171,15 +172,15 @@ export function Header(props: { readonly layout?: HeaderLayout }): JSX.Element {
           ) : null}
         </div>
       ) : (
-        <div className="min-w-0 flex-1 text-sm text-slate-500">
+        <div className="min-w-0 flex-1 text-sm text-ink-secondary">
           Select a project below to open your workspace.
         </div>
       )}
 
       <div className="flex shrink-0 flex-wrap items-center gap-2">
         {layout === "workspace" ? (
-          <button
-            className="flex shrink-0 items-center gap-2 rounded-md border border-surface-light px-3 py-2 text-xs font-medium text-slate-300 hover:border-primary/50 hover:text-slate-100 disabled:opacity-40"
+          <Button
+            className="text-xs"
             disabled={selectedProjectName === null || refreshMutation.isPending}
             onClick={() => {
               if (selectedProjectName !== null) {
@@ -188,23 +189,23 @@ export function Header(props: { readonly layout?: HeaderLayout }): JSX.Element {
               }
               refreshMutation.mutate();
             }}
-            type="button"
+            variant="secondary"
           >
             <RefreshCw className="h-3.5 w-3.5" aria-hidden />
             Refresh
-          </button>
+          </Button>
         ) : null}
-        <button
-          className="flex shrink-0 items-center gap-2 rounded-md border border-surface-light px-3 py-2 text-xs font-medium text-slate-400 hover:border-red-500/50 hover:text-red-200 disabled:opacity-40"
+        <Button
+          className="text-xs hover:border-status-danger/50 hover:text-status-danger"
           disabled={disconnectMutation.isPending}
           onClick={() => {
             disconnectMutation.mutate();
           }}
-          type="button"
+          variant="secondary"
         >
           <LogOut className="h-3.5 w-3.5" aria-hidden />
           Disconnect
-        </button>
+        </Button>
       </div>
     </header>
   );

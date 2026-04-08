@@ -8,6 +8,7 @@ import {
   useSessionStatus,
   type ApiHttpError,
 } from "@/api/insightops.api";
+import { Button } from "@/components/ui/Button";
 import { uxEvent } from "@/lib/uxTelemetry";
 import {
   clearVaultFromLocalStorage,
@@ -16,6 +17,12 @@ import {
   readVaultFromLocalStorage,
   writeVaultToLocalStorage,
 } from "@/lib/credentialVault";
+
+const fieldClass =
+  "mt-1 w-full min-h-[44px] rounded-input border border-line-default bg-panel px-3 py-2 text-sm text-ink-primary placeholder:text-ink-tertiary focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/15";
+
+const panelClass =
+  "rounded-panel border border-line-soft bg-panel p-6 shadow-panel-md";
 
 export function ConnectScreen(): JSX.Element {
   const navigate = useNavigate();
@@ -85,9 +92,9 @@ export function ConnectScreen(): JSX.Element {
 
   if (sessionStatus.isPending) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-surface px-4 text-slate-100">
-        <p className="text-lg font-semibold tracking-tight text-primary">InsightOps</p>
-        <p className="mt-3 text-sm text-slate-400">Checking connection…</p>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-page px-4 text-ink-primary">
+        <p className="text-lg font-semibold tracking-tight text-brand-primary">InsightOps</p>
+        <p className="mt-3 text-sm text-ink-secondary">Checking connection…</p>
       </div>
     );
   }
@@ -99,24 +106,21 @@ export function ConnectScreen(): JSX.Element {
   const showVaultPrimary = vaultPresent && !showManualConnect;
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface text-slate-100">
-      <header className="border-b border-surface-light px-6 py-4">
-        <h1 className="text-lg font-semibold tracking-tight text-primary">InsightOps</h1>
-        <p className="mt-1 max-w-xl text-sm text-slate-400">
+    <div className="flex min-h-screen flex-col bg-page text-ink-primary">
+      <header className="border-b border-line-soft bg-panel px-6 py-4 shadow-panel">
+        <h1 className="text-lg font-semibold tracking-tight text-brand-primary">InsightOps</h1>
+        <p className="mt-1 max-w-xl text-sm text-ink-secondary">
           Connect to Azure DevOps to map Git access, group membership, and permission paths in your
           projects.
         </p>
       </header>
       <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-6 py-10">
         {showVaultPrimary ? (
-          <section
-            aria-labelledby="unlock-heading"
-            className="rounded-lg border border-surface-light bg-surface-light/20 p-6"
-          >
-            <h2 className="text-sm font-semibold text-slate-200" id="unlock-heading">
+          <section aria-labelledby="unlock-heading" className={panelClass}>
+            <h2 className="text-sm font-semibold text-ink-primary" id="unlock-heading">
               Welcome back
             </h2>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-ink-secondary">
               Unlock your saved encrypted credentials on this browser to reconnect without retyping
               your PAT.
             </p>
@@ -125,7 +129,7 @@ export function ConnectScreen(): JSX.Element {
                 Passphrase
               </label>
               <input
-                className="w-full rounded-md border border-surface-light bg-surface px-3 py-2 text-sm text-slate-100 focus:border-primary focus:outline-none"
+                className={fieldClass}
                 id="unlock-pass"
                 onChange={(e) => {
                   setUnlockPassphrase(e.target.value);
@@ -135,13 +139,12 @@ export function ConnectScreen(): JSX.Element {
                 value={unlockPassphrase}
               />
               {unlockError !== null ? (
-                <p className="text-xs text-red-400" role="alert">
+                <p className="text-xs text-status-danger" role="alert">
                   {unlockError}
                 </p>
               ) : null}
               <div className="flex flex-wrap gap-2">
-                <button
-                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40"
+                <Button
                   disabled={unlockMutation.isPending || unlockPassphrase.length === 0}
                   onClick={() => {
                     unlockMutation.mutate();
@@ -149,51 +152,48 @@ export function ConnectScreen(): JSX.Element {
                   type="button"
                 >
                   {unlockMutation.isPending ? "Unlocking…" : "Unlock & connect"}
-                </button>
-                <button
-                  className="rounded-md border border-surface-light px-3 py-2 text-sm font-medium text-slate-300 hover:bg-surface-light/40"
+                </Button>
+                <Button
                   onClick={() => {
                     setShowManualConnect(true);
                   }}
                   type="button"
+                  variant="secondary"
                 >
                   Use different organization or PAT
-                </button>
-                <button
-                  className="rounded-md border border-red-500/40 px-3 py-2 text-sm font-medium text-red-300 hover:bg-red-500/10"
+                </Button>
+                <Button
                   onClick={() => {
                     clearVaultFromLocalStorage();
                     window.location.reload();
                   }}
                   type="button"
+                  variant="danger"
                 >
                   Clear saved vault
-                </button>
+                </Button>
               </div>
             </div>
           </section>
         ) : null}
 
-        {(!vaultPresent || showManualConnect) ? (
-          <section
-            aria-labelledby="connect-heading"
-            className="rounded-lg border border-surface-light bg-surface-light/20 p-6"
-          >
-            <h2 className="text-sm font-semibold text-slate-200" id="connect-heading">
+        {!vaultPresent || showManualConnect ? (
+          <section aria-labelledby="connect-heading" className={panelClass}>
+            <h2 className="text-sm font-semibold text-ink-primary" id="connect-heading">
               Connect to Azure DevOps
             </h2>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-ink-secondary">
               Tokens are sent to your local backend only. Optional encrypted storage uses WebCrypto
               in the browser when you opt in below.
             </p>
             <form className="mt-4 flex flex-col gap-4" onSubmit={onSubmit}>
               <div>
-                <label className="text-xs font-medium uppercase tracking-wide text-slate-500" htmlFor="org">
+                <label className="text-label text-ink-tertiary" htmlFor="org">
                   Organization name
                 </label>
                 <input
                   autoComplete="organization"
-                  className="mt-1 w-full rounded-md border border-surface-light bg-surface px-3 py-2 text-sm text-slate-100 focus:border-primary focus:outline-none"
+                  className={fieldClass}
                   id="org"
                   onChange={(e) => {
                     setOrg(e.target.value);
@@ -205,12 +205,12 @@ export function ConnectScreen(): JSX.Element {
                 />
               </div>
               <div>
-                <label className="text-xs font-medium uppercase tracking-wide text-slate-500" htmlFor="pat">
+                <label className="text-label text-ink-tertiary" htmlFor="pat">
                   Personal Access Token
                 </label>
                 <input
                   autoComplete="off"
-                  className="mt-1 w-full rounded-md border border-surface-light bg-surface px-3 py-2 text-sm text-slate-100 focus:border-primary focus:outline-none"
+                  className={fieldClass}
                   id="pat"
                   onChange={(e) => {
                     setPat(e.target.value);
@@ -221,18 +221,20 @@ export function ConnectScreen(): JSX.Element {
                   value={pat}
                 />
               </div>
-              <details className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-100/90">
-                <summary className="cursor-pointer font-medium text-amber-200">Security recommendations</summary>
-                <ul className="mt-2 list-inside list-disc space-y-1 text-amber-100/80">
+              <details className="rounded-input border border-status-warning/35 bg-status-warning-soft p-3 text-xs text-amber-950">
+                <summary className="cursor-pointer font-medium text-amber-950">
+                  Security recommendations
+                </summary>
+                <ul className="mt-2 list-inside list-disc space-y-1 text-amber-950/90">
                   <li>Use a short-lived PAT and rotate it after audits.</li>
                   <li>Minimum scopes: Code (read), Graph (read), Project and team (read).</li>
                   <li>The PAT is held in an HttpOnly session via your local API — not embedded in the SPA.</li>
                 </ul>
               </details>
-              <label className="flex items-start gap-2 text-sm text-slate-300">
+              <label className="flex items-start gap-2 text-sm text-ink-secondary">
                 <input
                   checked={remember}
-                  className="mt-1"
+                  className="mt-1 rounded border-line-default text-brand-primary focus:ring-brand-primary/30"
                   onChange={(e) => {
                     setRemember(e.target.checked);
                   }}
@@ -245,14 +247,11 @@ export function ConnectScreen(): JSX.Element {
               </label>
               {remember ? (
                 <div>
-                  <label
-                    className="text-xs font-medium uppercase tracking-wide text-slate-500"
-                    htmlFor="passphrase"
-                  >
+                  <label className="text-label text-ink-tertiary" htmlFor="passphrase">
                     Passphrase
                   </label>
                   <input
-                    className="mt-1 w-full rounded-md border border-surface-light bg-surface px-3 py-2 text-sm text-slate-100 focus:border-primary focus:outline-none"
+                    className={fieldClass}
                     id="passphrase"
                     onChange={(e) => {
                       setPassphrase(e.target.value);
@@ -263,22 +262,18 @@ export function ConnectScreen(): JSX.Element {
                 </div>
               ) : null}
               {errMsg !== null ? (
-                <p className="text-sm text-red-400" role="alert">
+                <p className="text-sm text-status-danger" role="alert">
                   {errMsg}
                   {apiRequestId !== undefined ? (
-                    <span className="mt-1 block text-xs text-slate-500">
+                    <span className="mt-1 block text-xs text-ink-tertiary">
                       Request ID: {apiRequestId}
                     </span>
                   ) : null}
                 </p>
               ) : null}
-              <button
-                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40"
-                disabled={connectMutation.isPending}
-                type="submit"
-              >
+              <Button disabled={connectMutation.isPending} type="submit">
                 {connectMutation.isPending ? "Connecting…" : "Connect"}
-              </button>
+              </Button>
             </form>
           </section>
         ) : null}

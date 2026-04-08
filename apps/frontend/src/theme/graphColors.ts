@@ -1,22 +1,20 @@
-/** Aligned with `tailwind.config.ts` `theme.extend.colors.node`. */
+import { colors, graphPermissionEdgeStroke } from "@/theme/designTokens";
+
+/** Node fills for minimap / non-Tailwind consumers — aligned with `tailwind.config` `theme.extend.colors.node`. */
 export const GRAPH_NODE_COLORS = {
-  user: "#3b82f6",
-  group: "#8b5cf6",
-  repo: "#10b981",
-  fallback: "#64748b",
+  user: colors.data.blue,
+  group: colors.data.violet,
+  repo: colors.data.teal,
+  fallback: colors.graph.nodeFallback,
 } as const;
 
-/** Membership edges — dashed gray on canvas. */
-export const MEMBERSHIP_EDGE_STROKE = "#64748b";
+/** Membership edges — dashed slate on canvas. */
+export const MEMBERSHIP_EDGE_STROKE = colors.graph.membershipEdge;
 
-/** Elevated / risky permission grants (solid amber). */
-export const ELEVATED_PERMISSION_EDGE_STROKE = "#f59e0b";
+/** Elevated / risky permission grants — semantic warning. */
+export const ELEVATED_PERMISSION_EDGE_STROKE = colors.status.warning;
 
-/** Aligned with `tailwind.config.ts` `theme.extend.colors.status`. */
+/** Git permission edge strokes by ACL state. */
 export const PERMISSION_EDGE_STROKE: Record<string, string> = {
-  allow: "#22c55e",
-  deny: "#ef4444",
-  "inherited-allow": "#4ade80",
-  "inherited-deny": "#f87171",
-  "not-set": "#64748b",
+  ...graphPermissionEdgeStroke,
 };

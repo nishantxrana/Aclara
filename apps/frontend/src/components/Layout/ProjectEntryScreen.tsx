@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 
 import { QUERY_KEYS, useProjects } from "@/api/insightops.api";
+import { Card } from "@/components/ui/Card";
 import { uxEvent } from "@/lib/uxTelemetry";
 import { useVisualizerStore } from "@/stores/visualizer.store";
 
@@ -25,17 +26,17 @@ export function ProjectEntryScreen(): JSX.Element {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center gap-8 px-6 py-12">
       <div>
-        <h1 className="text-xl font-semibold text-slate-100">Choose a project</h1>
-        <p className="mt-2 text-sm text-slate-400">
+        <h1 className="text-xl font-semibold text-ink-primary">Choose a project</h1>
+        <p className="mt-2 text-sm text-ink-secondary">
           InsightOps loads repositories, identities, and Git permissions for one project at a time. Pick the project
           you want to audit or investigate.
         </p>
       </div>
 
       {urlError !== null ? (
-        <p className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+        <p className="rounded-input border border-status-warning/35 bg-status-warning-soft px-3 py-2 text-sm text-amber-950">
           Could not open linked project{" "}
-          <span className="font-medium text-amber-50">{urlError}</span>. Select a valid project below.
+          <span className="font-medium">{urlError}</span>. Select a valid project below.
         </p>
       ) : null}
 
@@ -64,14 +65,14 @@ export function ProjectEntryScreen(): JSX.Element {
         <NoProjectMessage />
       </div>
 
-      <div className="rounded-lg border border-surface-light bg-surface-light/20 p-4 text-sm text-slate-400">
-        <p className="font-medium text-slate-300">What you can do next</p>
+      <Card className="!p-4 text-sm text-ink-secondary shadow-panel">
+        <p className="font-medium text-ink-primary">What you can do next</p>
         <ul className="mt-2 list-inside list-disc space-y-1">
           <li>See who has access to which repositories</li>
           <li>Trace why a user has effective Git access to a repo</li>
           <li>Review identities flagged for elevated permissions</li>
         </ul>
-      </div>
+      </Card>
     </main>
   );
 }

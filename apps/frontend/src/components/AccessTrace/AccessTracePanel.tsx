@@ -15,21 +15,20 @@ import { useVisualizerStore } from "@/stores/visualizer.store";
 
 import { uxEvent } from "@/lib/uxTelemetry";
 
+import { layout } from "@/theme/designTokens";
+
 import { PermissionChip } from "./PermissionChip";
 import { TraceStep } from "./TraceStep";
-
-const TRACE_PANEL_MIN_W = 260;
-const TRACE_PANEL_MAX_W = 520;
 
 function TracePanelSkeleton(): JSX.Element {
   return (
     <div className="flex flex-1 flex-col gap-4 p-4" aria-busy="true">
-      <div className="h-4 w-3/4 animate-pulse rounded bg-surface-light" />
-      <div className="h-3 w-1/2 animate-pulse rounded bg-surface-light/80" />
+      <div className="h-4 w-3/4 animate-pulse rounded bg-panel-muted" />
+      <div className="h-3 w-1/2 animate-pulse rounded bg-panel-subtle" />
       <div className="mt-4 space-y-3">
-        <div className="h-16 animate-pulse rounded-lg bg-surface-light/60" />
-        <div className="h-16 animate-pulse rounded-lg bg-surface-light/60" />
-        <div className="h-16 animate-pulse rounded-lg bg-surface-light/60" />
+        <div className="h-16 animate-pulse rounded-lg bg-panel-subtle" />
+        <div className="h-16 animate-pulse rounded-lg bg-panel-subtle" />
+        <div className="h-16 animate-pulse rounded-lg bg-panel-subtle" />
       </div>
     </div>
   );
@@ -38,9 +37,9 @@ function TracePanelSkeleton(): JSX.Element {
 function PlaceholderState(props: { message: string; detail?: string }): JSX.Element {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 text-center">
-      <p className="text-sm text-slate-300">{props.message}</p>
+      <p className="text-sm text-ink-secondary">{props.message}</p>
       {props.detail !== undefined ? (
-        <p className="text-xs text-slate-500">{props.detail}</p>
+        <p className="text-xs text-ink-tertiary">{props.detail}</p>
       ) : null}
     </div>
   );
@@ -81,18 +80,18 @@ function GuidedChecklist(props: {
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
       <div>
-        <p className="text-sm font-medium text-slate-200">{headline}</p>
-        <p className="mt-1 text-xs text-slate-500">{sub}</p>
+        <p className="text-sm font-medium text-ink-primary">{headline}</p>
+        <p className="mt-1 text-xs text-ink-secondary">{sub}</p>
       </div>
       <ol className="space-y-2" role="list">
         {steps.map((s) => (
-          <li className="flex items-start gap-2 text-xs text-slate-400" key={s.label}>
+          <li className="flex items-start gap-2 text-xs text-ink-tertiary" key={s.label}>
             {s.done ? (
-              <CheckCircle2 aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+              <CheckCircle2 aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-status-success" />
             ) : (
-              <Circle aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-slate-600" />
+              <Circle aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-line-strong" />
             )}
-            <span className={s.done ? "text-slate-300" : ""}>{s.label}</span>
+            <span className={s.done ? "text-ink-primary" : ""}>{s.label}</span>
           </li>
         ))}
       </ol>
@@ -173,7 +172,10 @@ export function AccessTracePanel(): JSX.Element {
         return;
       }
       const delta = d.startX - ev.clientX;
-      const next = Math.min(TRACE_PANEL_MAX_W, Math.max(TRACE_PANEL_MIN_W, d.startW + delta));
+      const next = Math.min(
+        layout.tracePanelMax,
+        Math.max(layout.tracePanelMin, d.startW + delta)
+      );
       setTracePanelWidthPx(next);
     };
     const onUp = (): void => {
@@ -196,44 +198,44 @@ export function AccessTracePanel(): JSX.Element {
   return (
     <aside
       aria-label="Access trace"
-      className="relative flex shrink-0 flex-col border-l border-surface-light bg-surface-light/40"
+      className="relative flex shrink-0 flex-col border-l border-line-soft bg-panel shadow-panel"
       style={{ width: tracePanelWidthPx }}
     >
       <button
         aria-label="Resize trace panel"
-        className={`absolute left-0 top-0 z-10 flex h-full w-3 cursor-col-resize items-center justify-center border-r border-transparent hover:border-surface-light ${
-          isDragging ? "bg-surface-light/50" : ""
+        className={`absolute left-0 top-0 z-10 flex h-full w-3 cursor-col-resize items-center justify-center border-r border-transparent hover:border-line-soft ${
+          isDragging ? "bg-panel-muted" : ""
         }`}
         onPointerDown={onResizePointerDown}
         type="button"
       >
-        <GripVertical aria-hidden className="h-4 w-4 text-slate-600" />
+        <GripVertical aria-hidden className="h-4 w-4 text-ink-tertiary" />
       </button>
 
-      <div className="flex items-start justify-between gap-2 border-b border-surface-light py-3 pl-5 pr-4">
+      <div className="flex items-start justify-between gap-2 border-b border-line-soft py-3 pl-5 pr-4">
         <div className="min-w-0">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <h2 className="text-label font-semibold uppercase tracking-wide text-ink-tertiary">
             Access trace
           </h2>
           {hasPair && userSummary !== null && repoSummary !== null ? (
             <div className="mt-2 space-y-0.5">
-              <p className="truncate text-sm font-medium text-slate-100" title={userSummary.title}>
+              <p className="truncate text-sm font-medium text-ink-primary" title={userSummary.title}>
                 {userSummary.title}
               </p>
               {userSummary.subtitle !== undefined ? (
-                <p className="truncate text-xs text-slate-500" title={userSummary.subtitle}>
+                <p className="truncate text-xs text-ink-secondary" title={userSummary.subtitle}>
                   {userSummary.subtitle}
                 </p>
               ) : null}
-              <p className="truncate text-xs text-slate-400" title={repoSummary.title}>
+              <p className="truncate text-xs text-ink-tertiary" title={repoSummary.title}>
                 Repo: {repoSummary.title}
               </p>
               {repoSummary.branch !== undefined ? (
-                <p className="truncate text-xs text-slate-500">{repoSummary.branch}</p>
+                <p className="truncate text-xs text-ink-secondary">{repoSummary.branch}</p>
               ) : null}
             </div>
           ) : (
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-ink-secondary">
               Explain effective Git access between a user and a repository.
             </p>
           )}
@@ -241,7 +243,7 @@ export function AccessTracePanel(): JSX.Element {
         {hasPair ? (
           <button
             aria-label="Clear trace selection"
-            className="shrink-0 rounded p-1 text-slate-500 hover:bg-surface-light hover:text-slate-200"
+            className="shrink-0 rounded-input p-1 text-ink-tertiary hover:bg-panel-muted hover:text-ink-primary"
             onClick={() => {
               clearSelection();
             }}
@@ -265,10 +267,10 @@ export function AccessTracePanel(): JSX.Element {
 
         {hasPair && traceQuery.isError ? (
           <div className="p-4">
-            <p className="text-sm font-medium text-red-400">Trace failed</p>
-            <p className="mt-1 text-xs text-slate-500">{traceQuery.error.message}</p>
+            <p className="text-sm font-medium text-status-danger">Trace failed</p>
+            <p className="mt-1 text-xs text-ink-tertiary">{traceQuery.error.message}</p>
             {traceErrorRequestId !== undefined ? (
-              <p className="mt-2 font-mono text-[10px] text-slate-500">
+              <p className="mt-2 font-mono text-label text-ink-tertiary">
                 Request ID: {traceErrorRequestId}
               </p>
             ) : null}
@@ -278,24 +280,24 @@ export function AccessTracePanel(): JSX.Element {
         {hasPair && traceQuery.isSuccess ? (
           <div className="flex flex-col gap-4 p-4">
             <div
-              className="rounded-md border border-surface-light bg-surface/60 px-3 py-2 text-xs text-slate-300"
+              className="rounded-input border border-line-default bg-panel-muted/80 px-3 py-2 text-xs text-ink-primary"
               role="status"
             >
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+              <p className="text-label font-semibold uppercase tracking-wide text-ink-tertiary">
                 Summary
               </p>
-              <p className="mt-1 leading-relaxed text-slate-300">
+              <p className="mt-1 leading-relaxed text-ink-secondary">
                 {traceNarrativeSummary(traceQuery.data)}
               </p>
             </div>
 
             {!traceQuery.data.hasAccess ? (
               <div
-                className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100"
+                className="rounded-input border border-status-warning/40 bg-status-warning-soft px-3 py-2 text-xs text-amber-950"
                 role="status"
               >
                 <p className="font-medium">No effective access</p>
-                <p className="mt-1 text-amber-200/90">
+                <p className="mt-1 text-amber-950/90">
                   This user does not have Git access to the selected repository under current ACLs
                   and group memberships.
                 </p>
@@ -303,12 +305,12 @@ export function AccessTracePanel(): JSX.Element {
             ) : null}
 
             <section>
-              <h3 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              <h3 className="text-label font-semibold uppercase tracking-wide text-ink-tertiary">
                 Path
               </h3>
               <div className="mt-2">
                 {traceQuery.data.steps.length === 0 ? (
-                  <p className="text-xs text-slate-500">No intermediate steps returned.</p>
+                  <p className="text-xs text-ink-tertiary">No intermediate steps returned.</p>
                 ) : (
                   traceQuery.data.steps.map((step, i) => (
                     <TraceStep
@@ -334,12 +336,12 @@ export function AccessTracePanel(): JSX.Element {
             </section>
 
             <section>
-              <h3 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              <h3 className="text-label font-semibold uppercase tracking-wide text-ink-tertiary">
                 Effective permissions
               </h3>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {traceQuery.data.effectivePermissions.length === 0 ? (
-                  <span className="text-xs text-slate-500">None</span>
+                  <span className="text-xs text-ink-tertiary">None</span>
                 ) : (
                   traceQuery.data.effectivePermissions.map((p) => (
                     <PermissionChip key={p} label={p} level="allow" />
@@ -349,12 +351,12 @@ export function AccessTracePanel(): JSX.Element {
             </section>
 
             <section>
-              <h3 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              <h3 className="text-label font-semibold uppercase tracking-wide text-ink-tertiary">
                 Denied / blocked
               </h3>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {traceQuery.data.deniedPermissions.length === 0 ? (
-                  <span className="text-xs text-slate-500">None reported</span>
+                  <span className="text-xs text-ink-tertiary">None reported</span>
                 ) : (
                   traceQuery.data.deniedPermissions.map((p) => (
                     <PermissionChip key={p} label={p} level="deny" />

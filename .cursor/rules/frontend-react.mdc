@@ -34,9 +34,9 @@ alwaysApply: false
 - dagre layout computed ONCE when graph data changes, not on every render
 
 ## Styling
-- Tailwind CSS utility classes only — no inline styles, no CSS modules
-- Dark theme is default: `class="dark"` on `<html>`
-- Custom colors defined in `tailwind.config.ts`, not hardcoded hex values in JSX
+- Tailwind CSS utility classes only — no inline styles, no CSS modules (React Flow edge labels may use `style` for transform/position where required)
+- Light theme is default per `design.json`; optional `.dark` on `<html>` uses variables in `src/index.css`
+- Semantic colors: prefer `bg-page`, `bg-panel`, `text-ink-*`, `border-line-*`, `brand.*` from `tailwind.config.ts` / `src/theme/designTokens.ts`, not ad hoc hex in JSX
 - Responsive not required for POC — optimize for 1280px+ desktop
 
 ## API Layer

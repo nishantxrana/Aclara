@@ -37,7 +37,7 @@ Structured logs use `ux.*` events via `uxEvent()` in `apps/frontend/src/lib/uxTe
 ## Canvas nodes & labels
 
 - Nodes show **primary** title + optional **secondary** line (email / principal / default branch); hover the card to see full tooltip including graph id.
-- **Users** blue accent, **groups** purple, **repos** teal (left border + type label colors).
+- **Users** blue accent, **groups** violet, **repos** teal (left border + type label colors); selection rings use brand violet where applicable.
 
 ## Swim lanes & layout
 

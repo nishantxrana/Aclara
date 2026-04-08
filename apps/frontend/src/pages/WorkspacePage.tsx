@@ -62,7 +62,7 @@ export function WorkspacePage(): JSX.Element {
 
   if (pickingProject) {
     return (
-      <div className="flex h-screen min-h-0 flex-col bg-surface text-slate-100">
+      <div className="flex h-screen min-h-0 flex-col bg-page text-ink-primary">
         <Header layout="pickProject" />
         <ProjectEntryScreen />
       </div>
@@ -70,7 +70,7 @@ export function WorkspacePage(): JSX.Element {
   }
 
   return (
-    <div className="flex h-screen min-h-0 flex-col bg-surface text-slate-100">
+    <div className="flex h-screen min-h-0 flex-col bg-page text-ink-primary">
       <Header layout="workspace" />
       {urlProjectResolveError !== null ? (
         <UrlProjectNotFoundBanner

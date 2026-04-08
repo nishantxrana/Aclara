@@ -77,17 +77,20 @@ export function FilterBar(): JSX.Element {
     traceQuery.data,
   ]);
 
+  const chipActive = "border-brand-primary/45 bg-brand-primary/10 text-brand-primary";
+  const chipIdle = "border-line-default text-ink-tertiary hover:bg-panel-muted hover:text-ink-primary";
+
   return (
-    <div className="flex flex-wrap items-center gap-3 border-b border-surface-light bg-surface-light/30 px-4 py-2">
-      <div className="flex min-w-[200px] max-w-md flex-1 flex-col gap-1 rounded-md border border-surface-light bg-surface px-2 py-1.5">
+    <div className="flex flex-wrap items-center gap-3 border-b border-line-soft bg-panel-subtle/90 px-4 py-2">
+      <div className="flex min-w-[200px] max-w-md flex-1 flex-col gap-1 rounded-input border border-line-default bg-panel px-2 py-1.5 shadow-panel">
         <div className="flex items-center gap-2">
-          <GitBranch className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+          <GitBranch className="h-4 w-4 shrink-0 text-ink-tertiary" aria-hidden />
           <label className="sr-only" htmlFor="graph-filter">
             Filter graph nodes
           </label>
           <input
             autoComplete="off"
-            className="min-w-0 flex-1 bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent text-sm text-ink-primary placeholder:text-ink-tertiary focus:outline-none"
             id="graph-filter"
             onChange={(e) => {
               setFilterText(e.target.value);
@@ -98,18 +101,14 @@ export function FilterBar(): JSX.Element {
           />
         </div>
         {filterStats !== null && filterLower.length > 0 ? (
-          <p className="pl-6 text-[11px] text-slate-500">
-            <span className="text-slate-400">{String(filterStats.matchCount)}</span> matches ·{" "}
-            <span className="text-slate-400">{String(filterStats.visibleCount)}</span> visible nodes
+          <p className="pl-6 text-label text-ink-tertiary">
+            <span className="text-ink-secondary">{String(filterStats.matchCount)}</span> matches ·{" "}
+            <span className="text-ink-secondary">{String(filterStats.visibleCount)}</span> visible nodes
           </p>
         ) : null}
       </div>
 
-      <div
-        className="flex flex-wrap items-center gap-1"
-        role="group"
-        aria-label="Text filter mode"
-      >
+      <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Text filter mode">
         {(
           [
             { id: "highlight" as const, label: "Highlight" },
@@ -119,10 +118,8 @@ export function FilterBar(): JSX.Element {
         ).map((opt) => (
           <button
             aria-pressed={graphTextFilterMode === opt.id}
-            className={`rounded-md border px-2 py-1 text-[11px] font-medium ${
-              graphTextFilterMode === opt.id
-                ? "border-primary/50 bg-primary/15 text-primary"
-                : "border-surface-light text-slate-500 hover:text-slate-200"
+            className={`rounded-input border px-2 py-1 text-label font-medium ${
+              graphTextFilterMode === opt.id ? chipActive : chipIdle
             }`}
             key={opt.id}
             onClick={() => {
@@ -136,12 +133,12 @@ export function FilterBar(): JSX.Element {
         ))}
       </div>
 
-      <div className="flex items-center gap-1 rounded-md border border-surface-light p-0.5">
+      <div className="flex items-center gap-1 rounded-input border border-line-default bg-panel-muted/50 p-0.5">
         <button
-          className={`flex items-center gap-1.5 rounded px-2 py-1.5 text-xs font-medium ${
+          className={`flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium ${
             graphViewMode === "summary"
-              ? "bg-primary/20 text-primary"
-              : "text-slate-400 hover:text-slate-200"
+              ? "bg-brand-primary/12 text-brand-primary"
+              : "text-ink-tertiary hover:bg-panel hover:text-ink-primary"
           }`}
           onClick={() => {
             setGraphViewMode("summary");
@@ -154,10 +151,10 @@ export function FilterBar(): JSX.Element {
           Summary
         </button>
         <button
-          className={`flex items-center gap-1.5 rounded px-2 py-1.5 text-xs font-medium ${
+          className={`flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium ${
             graphViewMode === "path"
-              ? "bg-primary/20 text-primary"
-              : "text-slate-400 hover:text-slate-200"
+              ? "bg-brand-primary/12 text-brand-primary"
+              : "text-ink-tertiary hover:bg-panel hover:text-ink-primary"
           }`}
           onClick={() => {
             setGraphViewMode("path");
@@ -170,10 +167,10 @@ export function FilterBar(): JSX.Element {
           Path
         </button>
         <button
-          className={`flex items-center gap-1.5 rounded px-2 py-1.5 text-xs font-medium ${
+          className={`flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium ${
             graphViewMode === "advanced"
-              ? "bg-primary/20 text-primary"
-              : "text-slate-400 hover:text-slate-200"
+              ? "bg-brand-primary/12 text-brand-primary"
+              : "text-ink-tertiary hover:bg-panel hover:text-ink-primary"
           }`}
           onClick={() => {
             setGraphViewMode("advanced");
@@ -188,10 +185,10 @@ export function FilterBar(): JSX.Element {
       </div>
 
       <button
-        className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-medium ${
+        className={`flex items-center gap-2 rounded-input border px-3 py-1.5 text-xs font-medium ${
           showOnlyOverPrivileged
-            ? "border-amber-500/60 bg-amber-500/10 text-amber-300"
-            : "border-surface-light text-slate-400 hover:text-slate-200"
+            ? "border-status-warning/50 bg-status-warning-soft text-amber-950"
+            : "border-line-default text-ink-tertiary hover:bg-panel-muted hover:text-ink-primary"
         }`}
         onClick={() => {
           toggleOverPrivileged();

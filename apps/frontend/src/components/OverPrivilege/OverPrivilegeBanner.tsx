@@ -9,15 +9,15 @@ import { useVisualizerStore } from "@/stores/visualizer.store";
 function EntityRow(props: { entity: IFlaggedEntity }): JSX.Element {
   const typeLabel = props.entity.type === "user" ? "User" : "Group";
   return (
-    <li className="rounded border border-surface-light/80 bg-surface/60 px-2 py-1.5 text-xs">
+    <li className="rounded-input border border-line-default bg-panel px-2 py-1.5 text-xs shadow-panel">
       <div className="flex items-start justify-between gap-2">
-        <span className="font-medium text-slate-200">{props.entity.label}</span>
-        <span className="shrink-0 text-[10px] uppercase tracking-wide text-slate-500">
+        <span className="font-medium text-ink-primary">{props.entity.label}</span>
+        <span className="shrink-0 text-label uppercase tracking-wide text-ink-tertiary">
           {typeLabel}
         </span>
       </div>
       <p
-        className="mt-0.5 text-slate-400"
+        className="mt-0.5 text-ink-secondary"
         title={props.entity.elevatedSummary}
       >
         {props.entity.elevatedSummary}
@@ -55,29 +55,29 @@ export function OverPrivilegeBanner(): JSX.Element | null {
 
   return (
     <div
-      className="border-b border-amber-500/25 bg-amber-500/5 px-4 py-2"
+      className="border-b border-status-warning/25 bg-status-warning-soft px-4 py-2"
       role="region"
       aria-label="Over-privileged summary"
     >
       <div className="flex flex-wrap items-center gap-2">
-        <ShieldAlert className="h-4 w-4 shrink-0 text-amber-400" aria-hidden />
+        <ShieldAlert className="h-4 w-4 shrink-0 text-status-warning" aria-hidden />
         {loading ? (
-          <p className="text-xs text-amber-100/90">Loading graph for over-privilege summary…</p>
+          <p className="text-xs text-amber-950/90">Loading graph for over-privilege summary…</p>
         ) : null}
         {graphError ? (
-          <p className="text-xs text-red-300/90">Could not load graph: {graphQuery.error.message}</p>
+          <p className="text-xs text-status-danger">Could not load graph: {graphQuery.error.message}</p>
         ) : null}
         {!loading && !graphError && summary.hasAny ? (
           <>
-            <p className="min-w-0 flex-1 text-xs text-amber-100/95">{summary.summaryLine}</p>
+            <p className="min-w-0 flex-1 text-xs text-amber-950">{summary.summaryLine}</p>
             {summary.devMockActive ? (
-              <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-200">
+              <span className="rounded-md bg-status-warning/25 px-1.5 py-0.5 text-label font-medium uppercase tracking-wide text-amber-950">
                 Dev mock
               </span>
             ) : null}
             <button
               aria-expanded={expanded}
-              className="flex shrink-0 items-center gap-1 rounded border border-amber-500/30 px-2 py-1 text-[11px] font-medium text-amber-100 hover:bg-amber-500/10"
+              className="flex shrink-0 items-center gap-1 rounded-input border border-status-warning/40 px-2 py-1 text-label font-medium text-amber-950 hover:bg-status-warning/20"
               onClick={toggleExpanded}
               type="button"
             >
@@ -91,13 +91,13 @@ export function OverPrivilegeBanner(): JSX.Element | null {
           </>
         ) : null}
         {!loading && !graphError && filterOnlyEmpty ? (
-          <p className="text-xs text-amber-100/90">
+          <p className="text-xs text-amber-950/90">
             Over-privileged filter is on, but no identities in this project are flagged with
             sensitive Git permission bits.
           </p>
         ) : null}
         {!loading && !graphError && showOnlyOverPrivileged && summary.hasAny ? (
-          <span className="text-[10px] uppercase tracking-wide text-amber-200/70">
+          <span className="text-label uppercase tracking-wide text-amber-900/80">
             Filter active
           </span>
         ) : null}

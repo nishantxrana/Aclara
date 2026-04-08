@@ -48,7 +48,7 @@ function MembershipEdgeComponent(props: EdgeProps): JSX.Element {
       {showLabel ? (
         <EdgeLabelRenderer>
           <div
-            className="nodrag nopan max-w-[140px] truncate rounded border border-surface-light bg-surface/95 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 shadow-sm pointer-events-none"
+            className="nodrag nopan max-w-[140px] truncate rounded border border-line-default bg-panel px-1.5 py-0.5 text-label font-medium text-ink-tertiary shadow-panel pointer-events-none"
             style={{
               position: "absolute",
               transform: `translate(-50%, -50%) translate(${String(labelX)}px,${String(
